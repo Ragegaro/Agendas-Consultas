@@ -7,7 +7,12 @@ void main() {
 	
  
 
+<<<<<<< HEAD
 	cout << "Estamos en main ";
+=======
+	cout << "vvolvemo a probar";
+	cout << "vvolvemo y ahora creamos un merge";
+>>>>>>> master
 	
 
 }
