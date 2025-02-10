@@ -7,7 +7,7 @@ void main() {
 	
  
 
-	cout << "vvolvemo a probar";
+	cout << "Estamos en main ";
 	
 
 }
