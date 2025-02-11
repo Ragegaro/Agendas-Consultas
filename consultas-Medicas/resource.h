@@ -1,17 +1,30 @@
 //{{NO_DEPENDENCIES}}
-// Archivo de inclusión generado de Microsoft Visual C++.
-// Usado por consultas-Medicas.rc
+// Microsoft Visual C++ generated include file.
+// Used by consultas-Medicas.rc
 //
-#define DLG_PRINCIPAL                   9
-
+#define IDD_DIALOG1                     104
+#define DLG_PRINCIPAL                   104
+#define IDD_DIALOG2                     111
+#define DLG_inicioDeSesion              111
+#define IDD_DIALOG3                     112
+#define DLG_MEDICOS                     112
+#define IDD_DIALOG4                     113
+#define DLG_CONSULTAS                   113
+#define IDD_DIALOG5                     114
+#define DLG_ESPECIALIDAD                114
+#define IDD_DIALOG6                     115
+#define DLG_PACIENTE                    115
+#define IDR_MENU1                       122
+#define IDD_DIALOG7                     123
+#define DLG_REPORTES                    123
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        103
-#define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1001
+#define _APS_NEXT_RESOURCE_VALUE        125
+#define _APS_NEXT_COMMAND_VALUE         40003
+#define _APS_NEXT_CONTROL_VALUE         1017
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -1,3 +1,4 @@
 # Agendas-Consultas
 
-Este Repositorio ya debe jalar por favor
+hasta el momento tenemos las ventanas ya creadas
+
