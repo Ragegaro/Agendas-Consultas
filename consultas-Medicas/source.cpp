@@ -1,5 +1,19 @@
 #include <Windows.h>
 #include"resource.h"
+#include<iostream>
+
+using namespace std;
+struct paciente {
+	int numeroDePaciente;
+	string nombrePaciente;
+	string correo;
+	int telefono;
+	bool genero;
+	short edad;
+	paciente* ant;
+	paciente* sig;
+
+};
 
 LRESULT CALLBACK fVentanaPrincipal(HWND,UINT,WPARAM,LPARAM);
 
@@ -34,3 +48,4 @@ LRESULT CALLBACK fVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 
 	return FALSE;
 }
+
