@@ -1,14 +1,15 @@
 #pragma once
 #include <string>
+//
 template <typename LL>
 struct miembroLista {
 	LL tipoLista;
 	miembroLista<LL>* sig;
 	miembroLista<LL>* ant;
 };
-
 template <typename LL>
 class listaLigadaDoble{};
+
 
 struct medicos {
 	int numCedula;
@@ -28,7 +29,29 @@ struct paciente {
 	bool genero;
 	short edad;
 };
-/////////////////////////////
+
+struct consultas {
+	/*
+	  ID de cita
+	fecha
+	dia de la semana
+	hora
+	horario
+	status
+	#consultorio
+	///
+	Numero de paciente
+	nombrePaciente
+	///
+	cedula
+	nombreMedico
+	Especialidad
+
+	status de la cita
+	Diagnostico
+	*/
+};
+
 ///--- Lista extra ---///
 struct especialidad {
 	char clave[3];
@@ -36,27 +59,9 @@ struct especialidad {
 };
 //////////////////////
 
-struct consultas {
-/*
-  ID de cita
-fecha
-dia de la semana
-hora
-horario
-status
-#consultorio
-///
-Numero de paciente
-nombrePaciente
-///
-cedula
-nombreMedico
-Especialidad
-
-status de la cita
-Diagnostico
-*/
-};
+/*-----WINAPI------*/
+//menu  (solo aparece en pantalla principal)
+HMENU hMenuCitas;
 
 ///  ventanas
 HWND hVentanaPrincipal;
@@ -66,9 +71,6 @@ HWND hVentanaConsultas;
 HWND hVentanaEspecialidad;
 HWND hVentanaReporte;
 //HWND hAlgoMas;
-
-//menu
-HMENU hMenuCitas;
 
 //cargade la ventana
 //LRESULT CALLBACK cVentanaLogIn(HWND, UINT, WPARAM, LPARAM);
@@ -89,9 +91,3 @@ LRESULT CALLBACK cVentanaReporte(HWND, UINT, WPARAM, LPARAM);
 // LRESULT CALLBACK cVentanaEasterEGG(HWND, UINT, WPARAM, LPARAM);
 
 
-
-
-
-
-
-/////////////////////////////////////
