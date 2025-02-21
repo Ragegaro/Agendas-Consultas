@@ -4,6 +4,7 @@ using namespace std;
 // #include <Datatime>
 #include"resource.h"
 #include "Declaraciones.h"
+//#include <gl/>
 
 //  "DATA GRID" EN WIN API  //
 #include <commctrl.h>
@@ -24,7 +25,7 @@ int WINAPI WinMain(HINSTANCE hInst,HINSTANCE hPrev,PSTR cmdLine,int cShow) {
 	}
 	return 0;
 }
-#pragma region VentanaLogIn
+#pragma region LogInDesactivado
 
 /*LRESULT CALLBACK fVentanaLogIn(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
@@ -109,13 +110,14 @@ int WINAPI WinMain(HINSTANCE hInst,HINSTANCE hPrev,PSTR cmdLine,int cShow) {
 
 LRESULT CALLBACK cVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg) {
-        case WM_INITDIALOG: {
-            hMenuCitas = LoadMenu(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_MENU1));
-            if (hMenuCitas) { SetMenu(hwnd, hMenuCitas); DrawMenuBar(hwnd); }
-        } break;
+    
+    case WM_INITDIALOG: {
+    hMenuCitas = LoadMenu(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_MENU1));
+    if (hMenuCitas) { SetMenu(hwnd, hMenuCitas); DrawMenuBar(hwnd); }
+    } break;
 
-        case WM_COMMAND: {
-            switch (LOWORD(wParam)) {
+    case WM_COMMAND: {
+        switch (LOWORD(wParam)) {
             case BTN_PRINC_LogOut: {
                 MessageBox(hwnd, "Funcion en desarrollo", "ERROR", MB_OK);
 
@@ -127,23 +129,36 @@ LRESULT CALLBACK cVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
             }break;
             case ID_MEDICOS: {
                 ShowWindow(hwnd, SW_HIDE);
-                hVentanaPacientes = CreateDialog(GetModuleHandle(NULL), MAKEINTRESOURCE(DLG_PACIENTE), NULL, cVentanaPaciente);
-                ShowWindow(hVentanaPacientes, SW_SHOW);
+                hVentanaMedicos = CreateDialog(GetModuleHandle(NULL), MAKEINTRESOURCE(DLG_MEDICOS), NULL, cVentanaMedicos);
+                ShowWindow(hVentanaMedicos, SW_SHOW);
             } break;
-            case ID_CONSULTAS: {}break;
-            case ID_Especialidad: {}break;
-            case ID_reporte: {}break;
-            case ID_algoMas: {}break;
+            case ID_CONSULTAS: {
+                ShowWindow(hwnd, SW_HIDE);
+                hVentanaConsultas= CreateDialog(GetModuleHandle(NULL), MAKEINTRESOURCE(DLG_CONSULTAS), NULL, cVentanaConsultas);
+                ShowWindow(hVentanaConsultas, SW_SHOW);
+            }break;
+            case ID_Especialidad: {
+                ShowWindow(hwnd, SW_HIDE);
+                hVentanaEspecialidad = CreateDialog(GetModuleHandle(NULL), MAKEINTRESOURCE(DLG_ESPECIALIDAD), NULL, cVentanaEspecialidades);
+                ShowWindow(hVentanaEspecialidad, SW_SHOW);
+            }break;
+            case ID_reporte: {
+                ShowWindow(hwnd, SW_HIDE);
+                hVentanaReporte = CreateDialog(GetModuleHandle(NULL), MAKEINTRESOURCE(DLG_REPORTES), NULL, cVentanaReporte);
+                ShowWindow(hVentanaReporte, SW_SHOW);
+            
+            }break;
+          //  case ID_algoMas: {}break;
+
             case ID_salir: {
                 DestroyWindow(hwnd); PostQuitMessage(117);
             }break;
             }
+    }break;
 
-        }break;
+    case WM_CLOSE: {DestroyWindow(hwnd);} break;
 
-
-        case WM_CLOSE: {DestroyWindow(hwnd);} break;
-        case WM_DESTROY: { PostQuitMessage(117); break; /*Es ventanaPrincipal ? si si, si ponlo*/ }
+    case WM_DESTROY: { PostQuitMessage(117); break; /*Es ventanaPrincipal ? si si, si ponlo*/ }
 		
 	}
 	return FALSE;
@@ -153,7 +168,7 @@ LRESULT CALLBACK cVentanaPaciente(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
     switch (msg) {
         case WM_CLOSE: {
             DestroyWindow(hwnd);
-            HWND hVentanaPrincipal = CreateDialog(GetModuleHandle(NULL), MAKEINTRESOURCE(DLG_PRINCIPAL), NULL, cVentanaPrincipal);
+            hVentanaPrincipal;
             ShowWindow(hVentanaPrincipal, SW_SHOW);
             break;
         }
@@ -161,10 +176,47 @@ LRESULT CALLBACK cVentanaPaciente(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
     return FALSE;
 }
 
-LRESULT CALLBACK cVentanaMedicos(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) { return FALSE; }
+LRESULT CALLBACK cVentanaMedicos(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) { 
+    switch (msg) {
+        case WM_CLOSE: {
+            DestroyWindow(hwnd);
+            hVentanaPrincipal; 
+            ShowWindow(hVentanaPrincipal, SW_SHOW);
+            break;
+        }
+    }    
+    return FALSE;
+}
 
-LRESULT CALLBACK cVentanaConsultas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) { return FALSE; }
+LRESULT CALLBACK cVentanaConsultas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    switch (msg) {
+    case WM_CLOSE: {
+        DestroyWindow(hwnd);
+        hVentanaPrincipal;
+        ShowWindow(hVentanaPrincipal, SW_SHOW);
+        break;
+    }
+    }
+    return FALSE; }
 
-LRESULT CALLBACK cVentanaEspecialidades(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) { return FALSE; }
+LRESULT CALLBACK cVentanaEspecialidades(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) { 
+    switch (msg) {
+    case WM_CLOSE: {
+        DestroyWindow(hwnd);
+        hVentanaPrincipal;
+        ShowWindow(hVentanaPrincipal, SW_SHOW);
+        break;
+    }
+    }
+    return FALSE; }
 
-LRESULT CALLBACK cVentanaReporte(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) { return FALSE; }
+LRESULT CALLBACK cVentanaReporte(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) { 
+    switch (msg) {
+    case WM_CLOSE: {
+        DestroyWindow(hwnd);
+        hVentanaPrincipal;
+        ShowWindow(hVentanaPrincipal, SW_SHOW);
+        break;
+    }
+    }
+    return FALSE; }
