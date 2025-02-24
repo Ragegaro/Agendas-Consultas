@@ -77,7 +77,7 @@
 #define CONS_COMBO_especi               508
 #define CONS_BTN_agendar                509
 #define CONS_BTN_reAgendar              510
-#define CONS_BTN_cancelar               511
+#define CONS_BTN_diagnostico            511
 #define CONS_LIST_consulDispo           512
 #define CONS_CAP_horaConsul             513
 #define CONS_PseuCAP_ceula              514
@@ -91,16 +91,21 @@
 #define CONS_TXT_especialidad           523
 #define CONS_TXT_numPaciente            524
 #define CONS_TXT_nomPac                 525
+#define CONS_BTN_regresar               526
 #define DLG_ESPECIALIDAD                600
+#define ESP_LIST_Especialidades         601
+#define ESP_CAP_clvEspecialidad         602
+#define ESP_CAP_especialidad            603
+#define ESP_BTN_modEsp                  604
+#define ESP_BTN_agregarEsp              605
+#define ESP_BTN_elimiEsp                606
+#define ESP_TXT_clvEspecialidad         607
+#define ESP_TXT_Especialidad            608
+#define ESP_BTN_regresarPrincipal       609
+#define ESP_BTN_regresarDoctor          610
 #define DLG_REPORTES                    700
-#define CONS_BTN_regresar               1163
-#define IDC_EDIT1                       1170
-#define IDC_LIST1                       1171
-#define IDC_EDIT2                       1172
-#define IDC_EDIT3                       1173
-#define IDC_BUTTON6                     1174
-#define IDC_BUTTON7                     1175
-#define IDC_BUTTON8                     1176
+#define CONS_CAP_diagCita               1181
+#define CONS_TXT_diagCita               1182
 #define IDR_MENU1                       40002
 #define ID_PACIENTES                    40003
 #define ID_CONSULTAS                    40004
@@ -116,7 +121,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        127
 #define _APS_NEXT_COMMAND_VALUE         40015
-#define _APS_NEXT_CONTROL_VALUE         1177
+#define _APS_NEXT_CONTROL_VALUE         1184
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

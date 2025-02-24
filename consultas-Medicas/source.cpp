@@ -165,16 +165,52 @@ LRESULT CALLBACK cVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 }
 
 LRESULT CALLBACK cVentanaPaciente(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    HWND hNum = GetDlgItem(hwnd, PAC_CAP_idPaciente);
+    HWND hName = GetDlgItem(hwnd, PAC_CAP_namePaciente);
+    HWND hApellidoP = GetDlgItem(hwnd, PAC_CAP_ApePatPaciente);
+    HWND hApellidoM = GetDlgItem(hwnd, PAC_CAP_ApeMatPaciente);
+    HWND hEmail = GetDlgItem(hwnd, PAC_CAP_emailPaciente);
+    HWND hTelefono = GetDlgItem(hwnd, PAC_CAP_telefonoPaciente);
+    HWND hGenero = GetDlgItem(hwnd, PAC_COMBO_generoPaciente);
+    HWND hEdad = GetDlgItem(hwnd, PAC_CAP_edadPaciente);
+
     switch (msg) {
-        case WM_CLOSE: {
-            DestroyWindow(hwnd);
-            hVentanaPrincipal;
-            ShowWindow(hVentanaPrincipal, SW_SHOW);
+    case WM_INITDIALOG:{
+        SendMessage(hGenero, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ("HOMBRE"));
+        SendMessage(hGenero, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ("MUJER"));
+        SendMessage(hGenero, CB_SETCURSEL, -1, 0);
+    }
+        
+    case WM_COMMAND: {
+        switch (wParam) {
+        case PAC_BTN_guardar: {
+            pacienteActual = new paciente; // Se inicializa el nodo
+            obtenerDatos(hNum, hName, hApellidoP, hApellidoM, hEmail, hTelefono, hEdad, hGenero, pacienteActual);
+            agregarNodo(pacienteIni, pacienteFin, pacienteActual);
+
+            // Mensaje de confirmación
+            char msgBuffer[100];
+            sprintf_s(msgBuffer, "Paciente agregado: %s %s", pacienteActual->nombrePaciente.c_str(), pacienteActual->apellidoPaterno.c_str());
+            MessageBox(hwnd, msgBuffer, "Paciente Guardado", MB_OK);
+            HWND hListBox = GetDlgItem(hwnd, PAC_LIST_ALLpacientes); // Reemplaza con tu ID
+            sprintf_s(msgBuffer, "%d - %s %s", pacienteActual->numPaciente, pacienteActual->nombrePaciente.c_str(), pacienteActual->apellidoPaterno.c_str());
+            SendMessage(hListBox, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(msgBuffer));
+
+
             break;
         }
+        }
+        break;
+    }
+    case WM_CLOSE: {
+        DestroyWindow(hwnd);
+        ShowWindow(hVentanaPrincipal, SW_SHOW);
+        break;
+    }
     }
     return FALSE;
 }
+
 
 LRESULT CALLBACK cVentanaMedicos(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) { 
     switch (msg) {

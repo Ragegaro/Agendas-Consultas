@@ -2,7 +2,6 @@
 #include <string>
 #include <fstream>
 //
-
 #pragma region intentoTemplate
 /*
 template <typename  LL>
@@ -96,31 +95,28 @@ public:
 
 struct medicos {
 	int numCedula;
-	char nombre[50];
-	char apellidoPaterno[50];
-	char apellidoMaterno[50];
-	char email[50];
+	string nombre;
+	string apellidoPaterno;
+	string apellidoMaterno;
+	string email[50];
 	int telefono;
-	char especialidad[50];
+	string especialidad[50];//creo que se podria hacer con algun entero y buscar en el archivo segun ese entero o con lista ligada
 	medicos* ant;
-	medicos *sig;
-	
-	//creo que se podria hacer con algun entero
-	// y buscar en el archivo segun ese entero o con lista ligada
-};
+	medicos* sig;
+} *medicoIni, *medicoFinal, *MedicoActual;
 
 struct paciente {
 	int numPaciente;
 	string nombrePaciente;
 	string apellidoPaterno;
-	string apellidoMmaterno;
+	string apellidoMaterno;
 	string correo;
 	int telefono;
 	bool genero;
 	short edad;
 	paciente *ant;
 	paciente *sig;
-};
+} *pacienteIni,*pacienteFin, *pacienteActual;
 
 struct consultas {
 	int folioCita;
@@ -143,8 +139,7 @@ struct consultas {
 
 	consultas *ant;
 	consultas *sig;
-};
-
+} *consultasIni, *consultasFin, *consulActual;
 ///--- Lista extra ---///
 struct especialidad {
 	//int idEspecialidad;
@@ -152,22 +147,77 @@ struct especialidad {
 	string defEspecialidad;
 	especialidad *sig;
 	especialidad* ant;
-};
+} *espeIni, *espeFin, *espeActual;
 //////////////////////
 
+enum tipoBusqueda {bPaciente, bMedico,bConsulta,bEspecialidad};
+//////
+
+template <typename LL>
+void agregarNodo(LL *&inicio, LL *&fin, LL *aux){
+	if (inicio == nullptr) inicio = fin = aux;
+	else {
+		fin->sig = aux;
+		aux->ant = fin;
+		fin = aux;
+	}
+}
 /*
-void insertarMedico(){}
-void modificarMedico() {}
-void eliminarMedico() {}
+agregarNodo(medicoIni, medicoFinal, MedicoActual);
+agregarNodo(pacienteIni, pacienteFin, pacienteActual);
+agregarNodo(consultasIni, consultasFin, consulActual);
+agregarNodo(espeIni, espeFin, espeActual);
+
+*/
+// final
+void agregagrMedico(medicos* aux) {
+	if (medicoIni == 0) {
+		medicoIni = medicoFinal = aux;
+	}
+	else {
+		medicoFinal->sig = aux;
+		aux->ant = medicoFinal;
+		medicoFinal = aux;
+	}
+}
 
 
-void insertarMedico() {}
-void insertarMedico() {}
+template<typename LL>
+void eliminarNodo() {
+
+}
+#pragma region BusquedaLoca
+/*
+enum TipoBusqueda { CEDULA, PACIENTE, FOLIO };
+
+template <typename T>
+T* buscarNodo(T* inicio, int clave, TipoBusqueda tipo) {
+	T* aux = inicio;
+	while (aux != nullptr) {
+		switch (tipo) {
+		case CEDULA:
+			if (aux->numCedula == clave) return aux;
+			break;
+		case PACIENTE:
+			if (aux->numPaciente == clave) return aux;
+			break;
+		case FOLIO:
+			if (aux->folioCita == clave) return aux;
+			break;
+		}
+		aux = aux->sig;
+	}
+	return nullptr;
+}
+*/
+#pragma endregion
 
 ///
 //void mostrarLista(){}
+//void guardarLista(){}
+//void cargarLista(){}
 ///
-*/
+
 /*-----WINAPI------*/
 //menu  (solo aparece en pantalla principal)
 HMENU hMenuCitas;
@@ -180,6 +230,38 @@ HWND hVentanaConsultas;
 HWND hVentanaEspecialidad;
 HWND hVentanaReporte;
 //HWND hAlgoMas;
+
+void obtenerDatos(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellidoM,
+	HWND hEmail, HWND hTelefono, HWND hEdad, HWND hGenero, paciente* pacienteActual) {
+	char buffer[256] = { 0 }; // Variable local para evitar problemas de memoria
+
+	GetWindowText(hNum, buffer, sizeof(buffer));
+	pacienteActual->numPaciente = atoi(buffer);
+
+	GetWindowText(hName, buffer, sizeof(buffer));
+	pacienteActual->nombrePaciente = buffer;
+
+	GetWindowText(hApellidoP, buffer, sizeof(buffer));
+	pacienteActual->apellidoPaterno = buffer;
+
+	GetWindowText(hApellidoM, buffer, sizeof(buffer));
+	pacienteActual->apellidoMaterno = buffer;
+
+	GetWindowText(hEmail, buffer, sizeof(buffer));
+	pacienteActual->correo = buffer;
+
+	GetWindowText(hTelefono, buffer, sizeof(buffer));
+	pacienteActual->telefono = atoi(buffer);
+
+	GetWindowText(hEdad, buffer, sizeof(buffer));
+	pacienteActual->edad = (short)atoi(buffer);
+#pragma region checar
+	// Obtener el género seleccionado del ComboBox
+	int generoIndex = SendMessage(hGenero, CB_GETCURSEL, 0, 0);
+	pacienteActual->genero = (generoIndex == 0); // 0 = Hombre, 1 = Mujer
+#pragma endregion
+}
+
 
 //declaracion de las ventana
 //LRESULT CALLBACK cVentanaLogIn(HWND, UINT, WPARAM, LPARAM);
