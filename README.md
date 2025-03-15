@@ -1,4 +1,4 @@
 # Agendas-Consultas
 
-hasta el momento tenemos las ventanas ya creadas
+El proyecto sigue en desarrollo pero se puede usar como 0plantilla en caso de que su programador lo necesite
 
