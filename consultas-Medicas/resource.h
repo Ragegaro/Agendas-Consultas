@@ -32,18 +32,18 @@
 #define PAC_CAP_edadPaciente            308
 #define PAC_LIST_ALLpacientes           309
 #define PAC_BTN_guardar                 310
-#define PAC_BTN_modificar               312
-#define PAC_TXT_idPaciente              313
-#define PAC_TXT_namePaciente            314
-#define PAC_TXT_ApePatPaciente          315
-#define PAC_TXT_ApeMatPaciente          316
-#define PAC_TXT_emailPaciente           317
-#define PAC_TXT_telefonoPaciente        318
-#define PAC_TXT_generoPaciente          319
-#define PAC_TXT_edadPaciente            320
-#define PAC_BTN_borrar                  321
-#define PAC_BTN_buscar                  322
-#define PAC_BTN_regresar                323
+#define PAC_BTN_modificar               311
+#define PAC_TXT_idPaciente              312
+#define PAC_TXT_namePaciente            313
+#define PAC_TXT_ApePatPaciente          314
+#define PAC_TXT_ApeMatPaciente          315
+#define PAC_TXT_emailPaciente           316
+#define PAC_TXT_telefonoPaciente        317
+#define PAC_TXT_generoPaciente          318
+#define PAC_TXT_edadPaciente            319
+#define PAC_BTN_borrar                  320
+#define PAC_BTN_buscar                  321
+#define PAC_BTN_regresar                322
 #define DLG_MEDICOS                     400
 #define MED_CAP_cedulaMed               401
 #define MED_CAP_nombreMed               402
@@ -92,6 +92,8 @@
 #define CONS_TXT_numPaciente            524
 #define CONS_TXT_nomPac                 525
 #define CONS_BTN_regresar               526
+#define CONS_CAP_diagCita               527
+#define CONS_TXT_diagCita               528
 #define DLG_ESPECIALIDAD                600
 #define ESP_LIST_Especialidades         601
 #define ESP_CAP_clvEspecialidad         602
@@ -103,25 +105,39 @@
 #define ESP_TXT_Especialidad            608
 #define ESP_BTN_regresarPrincipal       609
 #define ESP_BTN_regresarDoctor          610
+
 #define DLG_REPORTES                    700
-#define CONS_CAP_diagCita               1181
-#define CONS_TXT_diagCita               1182
+#define REP_RADIO_PACIENTE              1185
+#define REP_RADIO_MED                   1186
+#define REP_COMBO_Espec                 1187
+#define REP_DATE_FechaIni               1188
+#define REP_DATE_fechaFin               1189
+#define REP_LIST_consulta               1190
+#define REP_LIST_persona                1191
+#define REP_TXT_GROUP_escoja            1196
+#define REP_TXT_especialidad            1197
+#define REP_TXT_FechaFin                1198
+#define REP_TXT_FechaIni                1199
+#define REP_TXT_pacienteMedico          1200
+#define REP_TXT_consultas               1201
+#define REP_TXT_reporte                 1202
+
 #define IDR_MENU1                       40002
 #define ID_PACIENTES                    40003
-#define ID_CONSULTAS                    40004
-#define ID_Especialidad                 40008
-#define ID_reporte                      40010
-#define ID_algoMas                      40011
-#define ID_salir                        40012
-#define ID_MEDICOS                      40013
+#define ID_MEDICOS                      40004
+#define ID_CONSULTAS                    40005
+#define ID_Especialidad                 40006
+#define ID_reporte                      40007
+#define ID_algoMas                      40008
+#define ID_salir                        40009
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        127
+#define _APS_NEXT_RESOURCE_VALUE        128
 #define _APS_NEXT_COMMAND_VALUE         40015
-#define _APS_NEXT_CONTROL_VALUE         1184
+#define _APS_NEXT_CONTROL_VALUE         1204
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
