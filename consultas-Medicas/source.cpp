@@ -3,6 +3,7 @@ using namespace std;
 // #include <Datatime>
 #include"resource.h"
 #include "Declaraciones.h"
+
 //#include <gl/>
 
 //  "DATA GRID" EN WIN API  //
@@ -113,6 +114,7 @@ LRESULT CALLBACK cVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
     case WM_INITDIALOG: {
     hMenuCitas = LoadMenu(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_MENU1));
     if (hMenuCitas) { SetMenu(hwnd, hMenuCitas); DrawMenuBar(hwnd); }
+    centrarVentana(hwnd);
     } break;
 
     case WM_COMMAND: {
@@ -173,7 +175,7 @@ LRESULT CALLBACK cVentanaPaciente(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
     HWND hGenero = GetDlgItem(hwnd, PAC_COMBO_generoPaciente);
     HWND hEdad = GetDlgItem(hwnd, PAC_CAP_edadPaciente);
     HWND hListBox = GetDlgItem(hwnd, PAC_LIST_ALLpacientes); 
-
+    
     switch (msg) {
     case WM_INITDIALOG:{
         SendMessage(hGenero, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ("HOMBRE"));
@@ -191,12 +193,37 @@ LRESULT CALLBACK cVentanaPaciente(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         - Junto con esto agregar un boton para reactivar pacientes
         */
         }break;
-        case PAC_BTN_modificar: {}break;
+        case PAC_BTN_modificar: {// tiene mejoras esta seccion
+            int selectedIndex = SendMessage(hListBox, LB_GETCURSEL, 0, 0);
+            char buffer[256];
+
+            if (selectedIndex != LB_ERR) {
+                SendMessage(hListBox, LB_GETTEXT, selectedIndex, (LPARAM)buffer);
+                int numPaciente = atoi(buffer);
+                paciente* aux = pacienteIni;
+                while (aux) {
+                    if (aux->numPaciente == numPaciente) {
+                        SetWindowText(hNum, std::to_string(aux->numPaciente).c_str());
+                        SetWindowText(hName, aux->nombrePaciente.c_str());
+                        SetWindowText(hApellidoP, aux->apellidoPaterno.c_str());
+                        SetWindowText(hApellidoM, aux->apellidoMaterno.c_str());
+                        SetWindowText(hEmail, aux->correo.c_str());
+                        SetWindowText(hTelefono, std::to_string(aux->telefono).c_str());
+                        SetWindowText(hEdad, std::to_string(aux->edad).c_str());
+                        SendMessage(hGenero, CB_SETCURSEL, aux->genero ? 0 : 1, 0);
+                        EnableWindow(hNum, FALSE);
+                        pacienteActual = aux;
+                        break;
+                    }
+                    aux = aux->sig;
+                }
+            }
+        
+        }break;
         case PAC_BTN_guardar: {
             pacienteActual = new paciente; // Se inicializa el nodo
-            obtenerDatos(hNum, hName, hApellidoP, hApellidoM, hEmail, hTelefono, hEdad, hGenero, pacienteActual);
+            obtenerDatosPaciente(hNum, hName, hApellidoP, hApellidoM, hEmail, hTelefono, hEdad, hGenero, pacienteActual);
             agregarNodo(pacienteIni, pacienteFin, pacienteActual);
-
 
             // Mensaje de confirmación
             char msgBuffer[100];
@@ -207,7 +234,7 @@ LRESULT CALLBACK cVentanaPaciente(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             pacienteActual->apellidoPaterno.c_str(),pacienteActual->apellidoMaterno.c_str(), pacienteActual->genero ? "Hombre" : "Mujer");
 
             SendMessage(hListBox, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(msgBuffer));
-            limpiarDatos(hNum, hName, hApellidoP, hApellidoM, hEmail, hTelefono, hEdad, hGenero);
+            limpiarDatosPaciente(hNum, hName, hApellidoP, hApellidoM, hEmail, hTelefono, hEdad, hGenero);
 
            
         } break;
@@ -233,6 +260,7 @@ LRESULT CALLBACK cVentanaPaciente(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 
 
 LRESULT CALLBACK cVentanaMedicos(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) { 
+    centrarVentana(hwnd);
     switch (msg) {
         case WM_CLOSE: {
             DestroyWindow(hwnd);
@@ -245,6 +273,7 @@ LRESULT CALLBACK cVentanaMedicos(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
 }
 
 LRESULT CALLBACK cVentanaConsultas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    centrarVentana(hwnd);
     switch (msg) {
     case WM_CLOSE: {
         DestroyWindow(hwnd);
@@ -256,6 +285,7 @@ LRESULT CALLBACK cVentanaConsultas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
     return FALSE; }
 
 LRESULT CALLBACK cVentanaEspecialidades(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) { 
+    centrarVentana(hwnd);
     switch (msg) {
     case WM_CLOSE: {
         DestroyWindow(hwnd);
@@ -267,6 +297,7 @@ LRESULT CALLBACK cVentanaEspecialidades(HWND hwnd, UINT msg, WPARAM wParam, LPAR
     return FALSE; }
 
 LRESULT CALLBACK cVentanaReporte(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) { 
+    centrarVentana(hwnd);
     switch (msg) {
     case WM_CLOSE: {
         DestroyWindow(hwnd);

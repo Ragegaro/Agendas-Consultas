@@ -7,12 +7,13 @@ struct medicos {
 	string nombre;
 	string apellidoPaterno;
 	string apellidoMaterno;
-	string email[50];
+	string email;
 	int telefono;
-	string especialidad[50];//creo que se podria hacer con algun entero y buscar en el archivo segun ese entero o con lista ligada
+	string especialidad;//creo que se podria hacer con algun entero y buscar en el archivo segun ese entero o con lista ligada
 	medicos* ant;
 	medicos* sig;
 } *medicoIni, *medicoFinal, *MedicoActual;
+
 struct paciente {
 	int numPaciente;
 	string nombrePaciente;
@@ -25,22 +26,24 @@ struct paciente {
 	paciente *ant;
 	paciente *sig;
 } *pacienteIni,*pacienteFin, *pacienteActual;
+
+enum status { completada, confirmada, cancelada, noLlego };
 struct consultas {
 	int folioCita;
 	//fecha ///char fecha[11]; // formmato: yyyy-mm-dd
 	//hora  ///char hora[6];   // formato : HH:MM
-	enum status {completada, confirmada, cancelada, noLlego};
+	
 	int numDeConusultorio;
 	int cedula;
 	string nombreMedico;
 	// string apellidoPaternoMedico;
 	string especialidad;
-
+	status statusCita;
 
 	int numPaciente;
 	string nombrePaciente;
 	// string apellidoPaternoPaciente;
-
+	status coso;
 	string resultado;
 	string diagnostico;
 
@@ -55,13 +58,12 @@ struct especialidad {
 	especialidad *sig;
 	especialidad* ant;
 } *espeIni, *espeFin, *espeActual;
-
-
+enum statusCita{};
 
 enum tipoBusqueda {bPaciente, bMedico,bConsulta,bEspecialidad};
  
 template <typename LL>
-void agregarNodo(LL *&inicio, LL *&fin, LL *aux){
+void agregarNodo(LL*& inicio, LL*& fin, LL* aux) {
 	if (inicio == nullptr) inicio = fin = aux;
 	else {
 		fin->sig = aux;
@@ -112,7 +114,7 @@ T* buscarNodo(T* inicio, int clave, TipoBusqueda tipo) {
 */
 #pragma endregion
 
-void obtenerDatos(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellidoM, HWND hEmail, HWND hTelefono, HWND hEdad, HWND hGenero, paciente* pacienteActual) {
+void obtenerDatosPaciente(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellidoM, HWND hEmail, HWND hTelefono, HWND hEdad, HWND hGenero, paciente* pacienteActual) {
 	char buffer[256] = { 0 }; // Variable local para evitar problemas de memoria
 
 	GetWindowText(hNum, buffer, sizeof(buffer));
@@ -135,7 +137,7 @@ void obtenerDatos(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellidoM, HWND 
 	pacienteActual->genero = (generoIndex == 0); // 0 = Hombre, 1 = Mujer
 #pragma endregion
 }
-void limpiarDatos(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellidoM, HWND hEmail, HWND hTelefono, HWND hEdad, HWND hGenero) {
+void limpiarDatosPaciente(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellidoM, HWND hEmail, HWND hTelefono, HWND hEdad, HWND hGenero) {
 	SetWindowText(hNum,"");
 	SetWindowText(hName, "");
 	SetWindowText(hApellidoP, "");
@@ -145,6 +147,7 @@ void limpiarDatos(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellidoM, HWND 
 	SetWindowText(hEdad, "");
 	SendMessage(hGenero, CB_SETCURSEL, -1, 0);
 }
+
 /*void guardarArchivo() {
 	tipoBusqueda busqueda;
 	switch (busqueda) {
@@ -162,7 +165,10 @@ void limpiarDatos(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellidoM, HWND 
 		}
 	}
 }*/
-
+//prueba 
+template <typename LL>
+ LL buscar() {};
+ // fin de prueba, no se termino 
 ///
 
 
