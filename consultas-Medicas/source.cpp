@@ -23,6 +23,9 @@ int WINAPI WinMain(HINSTANCE hInst,HINSTANCE hPrev,PSTR cmdLine,int cShow) {
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
+   
+    guardarEnArchivos(pacienteIni);
+
 	return 0;
 }
 #pragma region LogInDesactivado
@@ -152,12 +155,19 @@ LRESULT CALLBACK cVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
           //  case ID_algoMas: {}break;
 
             case ID_salir: {
+                
                 DestroyWindow(hwnd); PostQuitMessage(117);
             }break;
             }
     }break;
 
-    case WM_CLOSE: {DestroyWindow(hwnd);} break;
+    case WM_CLOSE: {
+        
+        DestroyWindow(hwnd);
+        
+    
+    
+    } break;
 
     case WM_DESTROY: { PostQuitMessage(117); break; /*Es ventanaPrincipal ? si si, si ponlo*/ }
 		
@@ -186,6 +196,7 @@ LRESULT CALLBACK cVentanaPaciente(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         
     case WM_COMMAND: {
         switch (wParam) {
+
         case PAC_BTN_borrar: {
         
         /* NOTA:
@@ -202,9 +213,9 @@ LRESULT CALLBACK cVentanaPaciente(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                 int numPaciente = atoi(buffer);
                 paciente* aux = pacienteIni;
                 while (aux) {
-                    if (aux->numPaciente == numPaciente) {
-                        SetWindowText(hNum, std::to_string(aux->numPaciente).c_str());
-                        SetWindowText(hName, aux->nombrePaciente.c_str());
+                    if (aux->id == numPaciente) {
+                        SetWindowText(hNum, std::to_string(aux->id).c_str());
+                        SetWindowText(hName, aux->nombre.c_str());
                         SetWindowText(hApellidoP, aux->apellidoPaterno.c_str());
                         SetWindowText(hApellidoM, aux->apellidoMaterno.c_str());
                         SetWindowText(hEmail, aux->correo.c_str());
@@ -221,21 +232,23 @@ LRESULT CALLBACK cVentanaPaciente(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         
         }break;
         case PAC_BTN_guardar: {
+
             pacienteActual = new paciente; // Se inicializa el nodo
             obtenerDatosPaciente(hNum, hName, hApellidoP, hApellidoM, hEmail, hTelefono, hEdad, hGenero, pacienteActual);
             agregarNodo(pacienteIni, pacienteFin, pacienteActual);
 
             // Mensaje de confirmación
             char msgBuffer[100];
-            sprintf_s(msgBuffer, "Paciente agregado: %s %s", pacienteActual->nombrePaciente.c_str(), pacienteActual->apellidoPaterno.c_str());
+            sprintf_s(msgBuffer, "Paciente agregado: %s %s", pacienteActual->nombre.c_str(), pacienteActual->apellidoPaterno.c_str());
             MessageBox(hwnd, msgBuffer, "Paciente Guardado", MB_OK);
            
-            sprintf_s(msgBuffer, "%d - %s %s %s - %s ", pacienteActual->numPaciente, pacienteActual->nombrePaciente.c_str(),
+            sprintf_s(msgBuffer, "%d - %s %s %s - %s ", pacienteActual->id, pacienteActual->nombre.c_str(),
             pacienteActual->apellidoPaterno.c_str(),pacienteActual->apellidoMaterno.c_str(), pacienteActual->genero ? "Hombre" : "Mujer");
 
             SendMessage(hListBox, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(msgBuffer));
             limpiarDatosPaciente(hNum, hName, hApellidoP, hApellidoM, hEmail, hTelefono, hEdad, hGenero);
 
+            
            
         } break;
         case PAC_BTN_buscar: {}break;
@@ -248,8 +261,8 @@ LRESULT CALLBACK cVentanaPaciente(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         break;
     }
     case WM_CLOSE: {
+        
         DestroyWindow(hwnd);
-       
         ShowWindow(hVentanaPrincipal, SW_SHOW);
         break;
     }
