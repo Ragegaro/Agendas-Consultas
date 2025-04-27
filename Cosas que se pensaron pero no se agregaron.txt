@@ -1,0 +1,2 @@
+Al agregar un nodo pudimos haber aplicado una busqueda binaria  para comparar si el id ya existia y si no existia aplicar el insert sort con algun
+ dato de la busqueda binaria y asi la lista quedaba ordenada desde un comienzo en caso de que la lista estuviera vacia

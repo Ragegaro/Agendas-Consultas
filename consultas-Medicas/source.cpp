@@ -25,6 +25,8 @@ int WINAPI WinMain(HINSTANCE hInst,HINSTANCE hPrev,PSTR cmdLine,int cShow) {
 	}
    
     guardarEnArchivos(pacienteIni);
+    
+    
 
 	return 0;
 }
@@ -185,90 +187,164 @@ LRESULT CALLBACK cVentanaPaciente(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
     HWND hGenero = GetDlgItem(hwnd, PAC_COMBO_generoPaciente);
     HWND hEdad = GetDlgItem(hwnd, PAC_CAP_edadPaciente);
     HWND hListBox = GetDlgItem(hwnd, PAC_LIST_ALLpacientes); 
-    
+    HWND hbotonGuardar = GetDlgItem(hwnd, PAC_BTN_guardar);
+    paciente* pacienteVacio = new paciente;
+
     switch (msg) {
-    case WM_INITDIALOG:{
-        SendMessage(hGenero, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ("HOMBRE"));
-        SendMessage(hGenero, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ("MUJER"));
-        SendMessage(hGenero, CB_SETCURSEL, -1, 0);
-        centrarVentana(hwnd);
-    }
+        case WM_INITDIALOG: {
+            SendMessage(hGenero, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ("Seleccione"));
+            SendMessage(hGenero, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ("HOMBRE"));
+            SendMessage(hGenero, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ("MUJER"));
+            SendMessage(hGenero, CB_SETCURSEL, 2, 0);
+            centrarVentana(hwnd);
         
-    case WM_COMMAND: {
-        switch (wParam) {
+            pacienteVacio->id = 0;  // ID especial para paciente vacío
+            pacienteVacio->nombre = "Nuevo Paciente";
 
-        case PAC_BTN_borrar: {
-        
-        /* NOTA:
-        -Proximamente: Agregar  lista ligada de pacientes eliminados, para no usar un numero ya usado, en los ultimos 5 años
-        - Junto con esto agregar un boton para reactivar pacientes
-        */
-        }break;
-        case PAC_BTN_modificar: {// tiene mejoras esta seccion
-            int selectedIndex = SendMessage(hListBox, LB_GETCURSEL, 0, 0);
-            char buffer[256];
+            // Agregar el paciente vacío al list box
+            char msgBuffer[256];
+            sprintf_s(msgBuffer, "%d - %s", pacienteVacio->id, pacienteVacio->nombre.c_str());
+            int index = (int)SendMessage(hListBox, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(msgBuffer));
+            SendMessage(hListBox, LB_SETITEMDATA, index, (LPARAM)pacienteVacio->id);
 
-            if (selectedIndex != LB_ERR) {
-                SendMessage(hListBox, LB_GETTEXT, selectedIndex, (LPARAM)buffer);
-                int numPaciente = atoi(buffer);
-                paciente* aux = pacienteIni;
-                while (aux) {
-                    if (aux->id == numPaciente) {
-                        SetWindowText(hNum, std::to_string(aux->id).c_str());
-                        SetWindowText(hName, aux->nombre.c_str());
-                        SetWindowText(hApellidoP, aux->apellidoPaterno.c_str());
-                        SetWindowText(hApellidoM, aux->apellidoMaterno.c_str());
-                        SetWindowText(hEmail, aux->correo.c_str());
-                        SetWindowText(hTelefono, std::to_string(aux->telefono).c_str());
-                        SetWindowText(hEdad, std::to_string(aux->edad).c_str());
-                        SendMessage(hGenero, CB_SETCURSEL, aux->genero ? 0 : 1, 0);
-                        EnableWindow(hNum, FALSE);
-                        pacienteActual = aux;
-                        break;
-                    }
-                    aux = aux->sig;
-                }
-            }
-        
-        }break;
-        case PAC_BTN_guardar: {
-
-            pacienteActual = new paciente; // Se inicializa el nodo
-            obtenerDatosPaciente(hNum, hName, hApellidoP, hApellidoM, hEmail, hTelefono, hEdad, hGenero, pacienteActual);
-            agregarNodo(pacienteIni, pacienteFin, pacienteActual);
-
-            // Mensaje de confirmación
-            char msgBuffer[100];
-            sprintf_s(msgBuffer, "Paciente agregado: %s %s", pacienteActual->nombre.c_str(), pacienteActual->apellidoPaterno.c_str());
-            MessageBox(hwnd, msgBuffer, "Paciente Guardado", MB_OK);
-           
-            sprintf_s(msgBuffer, "%d - %s %s %s - %s ", pacienteActual->id, pacienteActual->nombre.c_str(),
-            pacienteActual->apellidoPaterno.c_str(),pacienteActual->apellidoMaterno.c_str(), pacienteActual->genero ? "Hombre" : "Mujer");
-
-            SendMessage(hListBox, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(msgBuffer));
-            limpiarDatosPaciente(hNum, hName, hApellidoP, hApellidoM, hEmail, hTelefono, hEdad, hGenero);
-
-            
-           
+            // Establecer el paciente vacío como seleccionado       
+            // Aquí puedes realizar más inicializaciones si es necesario
         } break;
-        case PAC_BTN_buscar: {}break;
-        case PAC_BTN_regresar: {
+        
+        case WM_COMMAND: {
+        
+            switch (LOWORD(wParam)) {
+                case PAC_LIST_ALLpacientes: {
+                    if (HIWORD(wParam) == LBN_SELCHANGE) {
+                        int selectedIndex = SendMessage(hListBox, LB_GETCURSEL, 0, 0);
+                        char buffer[256];
+                        if (selectedIndex != LB_ERR) {
+                            if (selectedIndex!=0) {
+                                int idPaciente = SendMessage(hListBox, LB_GETITEMDATA, selectedIndex, 0);
+                                paciente* aux = pacienteIni;
+                                while (aux) {
+                                    if (aux->id == idPaciente) {
+                                        SetWindowText(hNum, to_string(aux->id).c_str());
+                                        SetWindowText(hName, aux->nombre.c_str());
+                                        SetWindowText(hApellidoP, aux->apellidoPaterno.c_str());
+                                        SetWindowText(hApellidoM, aux->apellidoMaterno.c_str());
+                                        SetWindowText(hEmail, aux->correo.c_str());
+                                        SetWindowText(hTelefono, to_string(aux->telefono).c_str());
+                                        SetWindowText(hEdad, to_string(aux->edad).c_str());
+                                        SendMessage(hGenero, CB_SETCURSEL, aux->genero ? 0 : 1, 0);
+                                        EnableWindow(hNum, FALSE);
+                                        EnableWindow(hbotonGuardar, FALSE);
+                                        break;
+                                    }
+                                    aux = aux->sig;
+                                }
+                            }
+                            else {
+                                limpiarDatosPaciente(hNum, hName, hApellidoP, hApellidoM, hEmail, hTelefono, hEdad, hGenero);
+                                EnableWindow(hNum, true);
+                                EnableWindow(hbotonGuardar, TRUE);
+
+                            }
+                        }
+                    }
+                } break;
+                case PAC_BTN_guardar: {
+
+                    pacienteActual = new paciente; // Se inicializa el nodo
+                    obtenerDatosPaciente(hNum, hName, hApellidoP, hApellidoM, hEmail, hTelefono, hEdad, hGenero, pacienteActual);
+
+                    if (pacienteActual->id <= 0)  MessageBox(hwnd, "El ID no puede ser 0 ó menor a 0.", "Error", MB_OK);
+                    else {
+                        paciente* PacienteExistente = BusquedaBinariaID(pacienteIni, pacienteActual->id);
+                        if (PacienteExistente != nullptr) MessageBox(hwnd, "El paciente con este ID ya existe.", "Error", MB_OK);
+                        else {
+                            agregarNodo(pacienteIni, pacienteFin, pacienteActual);
+                            quicksortPacientes(pacienteIni, pacienteFin);
+                            limpiarDatosPaciente(hNum, hName, hApellidoP, hApellidoM, hEmail, hTelefono, hEdad, hGenero);
+                            char msgBuffer[100];
+                            sprintf_s(msgBuffer, "Paciente agregado: %s %s", pacienteActual->nombre.c_str(), pacienteActual->apellidoPaterno.c_str());
+                            MessageBox(hwnd, msgBuffer, "Paciente Guardado", MB_OK);
+
+
+                            SendMessage(hListBox, LB_RESETCONTENT, 0, 0);
+
+                            pacienteVacio->id = 0;  // ID especial para paciente vacío
+                            pacienteVacio->nombre = "Nuevo Paciente";
+                            sprintf_s(msgBuffer, "%d - %s", pacienteVacio->id, pacienteVacio->nombre.c_str());
+                            int index = (int)SendMessage(hListBox, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(msgBuffer));
+                            SendMessage(hListBox, LB_SETITEMDATA, index, (LPARAM)pacienteVacio->id);
+
+
+                            paciente* aux = pacienteIni;
+
+                            while (aux != nullptr) {
+                                sprintf_s(msgBuffer, "%d - %s %s %s - %s ", aux->id, aux->nombre.c_str(),
+                                    aux->apellidoPaterno.c_str(), aux->apellidoMaterno.c_str(), aux->genero ? "Hombre" : "Mujer");
+                                // PARTE CLAVE
+                                int index = (int)SendMessage(hListBox, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(msgBuffer));
+                                SendMessage(hListBox, LB_SETITEMDATA, index, (LPARAM)aux->id);
+                                aux = aux->sig;
+                            }
+
+
+
+
+                        }
+                    }
+                } break;
+                case PAC_BTN_modificar: {// tiene mejoras esta seccion
+
+
+                    /*
+                    obtener datos de edit control ID
+                    buscar id
+                    colocar el paciuente actual en ese datos
+                    cambiar datos por los que agrego el usuario
+
+                    */
+
+                }break;
+
+                case PAC_BTN_borrar: {
+        
+                /* NOTA:
+                -Proximamente: Agregar  lista ligada de pacientes eliminados, para no usar un numero ya usado, en los ultimos 5 años
+                - Junto con esto agregar un boton para reactivar pacientes
+                */
+                }break;
+               
+        
+
+                case PAC_BTN_buscar: {
+
+                /*obtener dato de id*/
+                    //busuquedas lineales
+                /*obtener dato de nombre*/
+                /*obtener dato de apellid*/
+                /*obtener dato de genero*/
+                /*obtener dato de telefono*/
+
+                }break;
+
+                case PAC_BTN_regresar: {
+                    DestroyWindow(hwnd);
+                    ShowWindow(hVentanaPrincipal, SW_SHOW);
+                } break;
+
+                }
+                break;
+        }
+        case WM_CLOSE: {
+        
             DestroyWindow(hwnd);
             ShowWindow(hVentanaPrincipal, SW_SHOW);
-        } break;
-
+            break;
         }
-        break;
-    }
-    case WM_CLOSE: {
-        
-        DestroyWindow(hwnd);
-        ShowWindow(hVentanaPrincipal, SW_SHOW);
-        break;
-    }
-    }
+      }
 
-    return FALSE;
+    
+        delete pacienteVacio;
+        return FALSE;
 }
 
 
