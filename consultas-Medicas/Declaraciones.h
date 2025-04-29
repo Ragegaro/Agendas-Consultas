@@ -75,6 +75,7 @@ void agregarNodo(LL*& inicio, LL*& fin, LL* aux) {
 		fin->sig = aux;
 		fin = aux;
 		fin->sig = nullptr;
+		
 	}
 	else {
 		inicio = fin = aux;
@@ -317,19 +318,28 @@ void guardarEnArchivosMedicos(medicos* Ini) {
 	archivo.close();
 }
 
-/*
-template <typename LL>
-void modificarNodo(LL*& inicio, LL*& fin, LL* aux) {}
+template <typename T>
+void eliminarNodo(T*& inicio, T*& fin, T* nodo) {
+	if (!nodo) return;
 
-template<typename LL>
-void eliminarNodo() {}
+	// Si es el primer nodo
+	if (nodo == inicio)
+		inicio = nodo->sig;
 
-template <typename LL>
-void mostrarNodo(LL*& inicio, LL*& fin, LL* aux) {}
-*/
+	// Si es el último nodo
+	if (nodo == fin)
+		fin = nodo->ant;
 
+	// Enlazar los nodos adyacentes
+	if (nodo->ant)
+		nodo->ant->sig = nodo->sig;
+	if (nodo->sig)
+		nodo->sig->ant = nodo->ant;
+
+	delete nodo; 
+}
 //-Modificar listas-//
-void modificarPaciente() {}
+
 void modificarMedico() {}
 void modificarCitas() {}
 void modificarEspecialidad() {}
@@ -359,8 +369,6 @@ void obtenerDatosPaciente(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellido
 	int generoIndex = SendMessage(hGenero, CB_GETCURSEL, 0, 0);
 	pacienteActual->genero = (generoIndex == 0); // 0 = Hombre, 1 = Mujer
 #pragma endregion
-	
-
 
 
 }
@@ -380,6 +388,7 @@ void limpiarDatosPaciente(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellido
 	SetWindowText(hTelefono, "");
 	SetWindowText(hEdad, "");
 	SendMessage(hGenero, CB_SETCURSEL, 2, 0);
+
 }
 //-PENDEIENTE MODIFICAR LAS DE ABAJO-//
 void limpiarDatosMedicos(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellidoM, HWND hEmail, HWND hTelefono, HWND hEdad, HWND hGenero) {}
