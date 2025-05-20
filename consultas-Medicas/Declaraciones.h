@@ -1,126 +1,275 @@
 #pragma once
 #include <string>
 #include <fstream>
+#include<iostream>
+// template<typename LL>
+using namespace std;
+
+#pragma region Listas ligadas
 
 struct medicos {
-	int numCedula;
+	int id;
 	string nombre;
 	string apellidoPaterno;
 	string apellidoMaterno;
 	string email;
 	int telefono;
+
 	string especialidad;//creo que se podria hacer con algun entero y buscar en el archivo segun ese entero o con lista ligada
 	medicos* ant;
 	medicos* sig;
-} *medicoIni, *medicoFinal, *MedicoActual;
+} *medicoIni= nullptr, *medicoFinal = nullptr, *MedicoActual = nullptr;
 
 struct paciente {
-	int numPaciente;
-	string nombrePaciente;
+	int id;
+	string nombre;
 	string apellidoPaterno;
 	string apellidoMaterno;
 	string correo;
 	int telefono;
 	bool genero;
 	short edad;
-	paciente *ant;
-	paciente *sig;
-} *pacienteIni,*pacienteFin, *pacienteActual;
+	paciente* ant;
+	paciente* sig;
+} *pacienteIni, * pacienteFin,* pacienteActual;
 
-enum status { completada, confirmada, cancelada, noLlego };
+enum estatus { completada, confirmada, cancelada, noLlego };
+
 struct consultas {
-	int folioCita;
-	//fecha ///char fecha[11]; // formmato: yyyy-mm-dd
-	//hora  ///char hora[6];   // formato : HH:MM
+	int id;
+	SYSTEMTIME fechaConsulta;
 	
 	int numDeConusultorio;
 	int cedula;
 	string nombreMedico;
 	// string apellidoPaternoMedico;
 	string especialidad;
-	status statusCita;
-
+	estatus statusCita;
 	int numPaciente;
 	string nombrePaciente;
 	// string apellidoPaternoPaciente;
-	status coso;
+
 	string resultado;
 	string diagnostico;
 
 	consultas *ant;
 	consultas *sig;
 } *consultasIni, *consultasFin, *consulActual;
-///--- Lista extra ---///
+
+///--- Lista extra de las sugeridas para el manejo de especialidades ---///
 struct especialidad {
-	//int idEspecialidad;
-	char clave[3];
+	
+	char clave[4];
 	string defEspecialidad;
 	especialidad *sig;
 	especialidad* ant;
 } *espeIni, *espeFin, *espeActual;
-enum statusCita{};
 
-enum tipoBusqueda {bPaciente, bMedico,bConsulta,bEspecialidad};
- 
-template <typename LL>
-void agregarNodo(LL*& inicio, LL*& fin, LL* aux) {
-	if (inicio == nullptr) inicio = fin = aux;
-	else {
-		fin->sig = aux;
-		aux->ant = fin;
-		fin = aux;
-	}
-}
-/* AGREGA AL FINAL DE LA LISTA------------FORMA DE USAR LA FUNCION AGREGAR NODO
-agregarNodo(medicoIni, medicoFinal, MedicoActual);
-agregarNodo(pacienteIni, pacienteFin, pacienteActual);
-agregarNodo(consultasIni, consultasFin, consulActual);
-agregarNodo(espeIni, espeFin, espeActual);
 
-*/
-/*
-template <typename LL>
-void modificarNodo(LL*& inicio, LL*& fin, LL* aux) {}
+#pragma endregion
 
+
+#pragma region opLL
 template<typename LL>
-void eliminarNodo() {}
-
-template <typename LL>
-void mostrarNodo(LL*& inicio, LL*& fin, LL* aux) {}
+void agregarNodo(LL*& inicio, LL*& fin, LL* aux) {
+	if (inicio!= nullptr) {	
+		aux->ant = fin;
+		fin->sig = aux;
+		fin = aux;
+		fin->sig = nullptr;
+		
+	}
+	else {
+		inicio = fin = aux;
+		inicio->ant = nullptr;
+		fin->sig = nullptr;
+	}
+} 
+/* AGREGA AL FINAL DE LA LISTA------------FORMA DE USAR LA FUNCION AGREGAR NODO
+agregarNodo(medicoIni, medicoFinal, MedicoActual);	agregarNodo(consultasIni, consultasFin, consulActual); agregarNodo(espeIni, espeFin, espeActual);
 */
-#pragma region BusquedaLoca
-/*
-enum TipoBusqueda { CEDULA, PACIENTE, FOLIO };
+template <typename LL>
+void eliminarNodo(LL*& inicio, LL*& fin, LL* nodo) {
+	if (!nodo) return;
 
-template <typename T>
-T* buscarNodo(T* inicio, int clave, TipoBusqueda tipo) {
-	T* aux = inicio;
+	if (nodo == inicio)  // Si es el primer nodo
+		inicio = nodo->sig;
+
+	// Si es el último nodo
+	if (nodo == fin)
+		fin = nodo->ant;
+
+	// Enlazar los nodos adyacentes
+	if (nodo->ant)
+		nodo->ant->sig = nodo->sig;
+	if (nodo->sig)
+		nodo->sig->ant = nodo->ant;
+
+	delete nodo;
+}
+
+//-Modificar listas esta directamente en WIN API-//
+#pragma endregion
+
+
+#pragma region busquedaBinaria
+template<typename LL>
+int ContarNodos(LL* inicio) {
+	int contador = 0;
+	LL* aux = inicio;
 	while (aux != nullptr) {
-		switch (tipo) {
-		case CEDULA:
-			if (aux->numCedula == clave) return aux;
-			break;
-		case PACIENTE:
-			if (aux->numPaciente == clave) return aux;
-			break;
-		case FOLIO:
-			if (aux->folioCita == clave) return aux;
-			break;
-		}
+		contador++;
 		aux = aux->sig;
+	}
+	return contador;
+}
+template<typename LL>
+LL* obtenerNodoPorIndice(LL* inicio, int indice){
+	LL* aux = inicio;
+	int  i = 0;
+	while (aux != nullptr && i < indice) {
+		aux = aux -> sig;
+		i++;
+	}
+	return aux;
+}
+template <typename LL>
+LL* BusquedaBinariaID (LL* inicio, int idBuscado){
+	int izquierda = 0, derecha = ContarNodos(inicio) - 1; 
+	
+	while (izquierda <= derecha) {
+		int medio = (izquierda + derecha) / 2;
+
+		LL* nodoMedio = obtenerNodoPorIndice(inicio, medio);
+
+		if (nodoMedio == nullptr) return nullptr;
+
+		if (nodoMedio->id == idBuscado) return nodoMedio;
+		else if (idBuscado < nodoMedio->id) derecha = medio - 1;
+		else izquierda = medio + 1;
 	}
 	return nullptr;
 }
-*/
 #pragma endregion
 
+#pragma region quickSortPac_ID
+void intercambiarDatosPaciente(paciente* a, paciente * b){
+	swap(a->id, b->id);
+	swap(a->nombre, b->nombre);
+	swap(a->apellidoPaterno, b->apellidoPaterno);
+	swap(a->apellidoMaterno, b->apellidoMaterno);
+	swap(a->correo, b->correo);
+	swap(a->telefono, b->telefono);
+	swap(a->genero, b->genero);
+	swap(a->edad, b->edad);
+}
+// Partición para quicksort (por ID)
+paciente* partition(paciente* low, paciente* high) {
+	int pivote = high->id;
+	paciente* i = low->ant;
+
+	for (paciente* j = low; j != high; j = j->sig) {
+		if (j->id < pivote) {
+			i = (i == nullptr) ? low : i->sig;
+			intercambiarDatosPaciente(i, j);
+		}
+	}
+
+	i = (i == nullptr) ? low : i->sig;
+	intercambiarDatosPaciente(i, high);
+	return i;
+}
+
+// Función recursiva de quicksort
+void quicksortPacientes(paciente* low, paciente* high) {
+	if (high != nullptr && low != high && low != high->sig) {
+		paciente* p = partition(low, high);
+		quicksortPacientes(low, p->ant);
+		quicksortPacientes(p->sig, high);
+	}
+}
+ 
+#pragma endregion
+
+
+template <typename LL>
+bool idBuscado(LL* tipoBusquedaIni,int idBuscado){
+	LL* aux = tipoBusquedaIni;
+	while (aux != NULL) {
+		if (aux->id == idBuscado) return true;
+		aux = aux->sig;
+	}
+	return false;
+}
+
+template<typename LL>
+LL buscarNombre_Lineal( LL*& inicio,LL* actual){
+
+}
+
+template<typename LL>
+LL buscarApellido_Lineal(LL*& inicio, LL* actual) {}
+
+//consultas* buscarFecha_Lineal() {}
+
+//medicos y pacientes 
+template <typename LL>
+
+// citas 
+void mergesort_ID(){}
+
+void ASASguardarEnArchivos(paciente* Ini) {
+
+	
+	ofstream archivo("prueba de lsita ligada.txt",ios::app);
+	if (!archivo.is_open()) {
+		cout << " archivo no se pudo abrir \n"; return;
+	}
+	if (Ini == nullptr) {
+		archivo << "No hay pacientes registrados." << endl;
+		archivo.close();
+		return;
+	}
+
+	while (Ini != nullptr) {
+
+		archivo << Ini->id << endl;
+		archivo << Ini->nombre << " " << Ini->apellidoPaterno << " " << Ini->apellidoMaterno << endl;
+		archivo << Ini->correo << endl;
+		archivo << Ini->telefono << endl;
+		archivo <<(Ini->genero == 0 ? "Mujer" : "Hombre") << endl;
+		archivo << "Edad: " << Ini->edad << endl;
+		
+		archivo << "----------------------------------------" << endl;
+		
+		
+
+		Ini = Ini->sig;
+
+	}
+	archivo.close();
+
+}
+
+void guardarPacienteBin(paciente* Ini, const string& nombreArchivo) {
+	ofstream Archivo(nombreArchivo, ios::binary | ios::trunc);
+	if (!Archivo.is_open()) { MessageBox(NULL, "Error al Abrir el archivo", "Error", MB_ICONERROR); return; }
+	pacienteActual = Ini;
+
+}
+
+void guardarEnArchivosMedicos(medicos* Ini) {
+}
+
+
+//-OBTENER DATOS DE WIN API-//
 void obtenerDatosPaciente(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellidoM, HWND hEmail, HWND hTelefono, HWND hEdad, HWND hGenero, paciente* pacienteActual) {
 	char buffer[256] = { 0 }; // Variable local para evitar problemas de memoria
-
+	
 	GetWindowText(hNum, buffer, sizeof(buffer));
-	pacienteActual->numPaciente = atoi(buffer);
+	pacienteActual->id = atoi(buffer);
 	GetWindowText(hName, buffer, sizeof(buffer));
-	pacienteActual->nombrePaciente = buffer;
+	pacienteActual->nombre = buffer;
 	GetWindowText(hApellidoP, buffer, sizeof(buffer));
 	pacienteActual->apellidoPaterno = buffer;
 	GetWindowText(hApellidoM, buffer, sizeof(buffer));
@@ -129,6 +278,8 @@ void obtenerDatosPaciente(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellido
 	pacienteActual->correo = buffer;
 	GetWindowText(hTelefono, buffer, sizeof(buffer));
 	pacienteActual->telefono = atoi(buffer);
+	
+
 	GetWindowText(hEdad, buffer, sizeof(buffer));
 	pacienteActual->edad = (short)atoi(buffer);
 #pragma region checar
@@ -136,7 +287,16 @@ void obtenerDatosPaciente(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellido
 	int generoIndex = SendMessage(hGenero, CB_GETCURSEL, 0, 0);
 	pacienteActual->genero = (generoIndex == 0); // 0 = Hombre, 1 = Mujer
 #pragma endregion
+
+
 }
+// algo asi debo agregar 
+//HWND hNum, HWND hName, HWND hApellidoP, HWND hApellidoM, HWND hEmail, HWND hTelefono, HWND hEdad, HWND hGenero, ll* acutal
+void obtenerDatosMedicos(){}
+void obtenerDatosConsulta() {}
+void obtenerDatosEspecialidad() {}
+
+//-LIMPIAR DATOS-//
 void limpiarDatosPaciente(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellidoM, HWND hEmail, HWND hTelefono, HWND hEdad, HWND hGenero) {
 	SetWindowText(hNum,"");
 	SetWindowText(hName, "");
@@ -145,36 +305,20 @@ void limpiarDatosPaciente(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellido
 	SetWindowText(hEmail, "");
 	SetWindowText(hTelefono, "");
 	SetWindowText(hEdad, "");
-	SendMessage(hGenero, CB_SETCURSEL, -1, 0);
+	SendMessage(hGenero, CB_SETCURSEL, 2, 0);
+
 }
+//-PENDEIENTE MODIFICAR LAS DE ABAJO-//
+void limpiarDatosMedicos(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellidoM, HWND hEmail, HWND hTelefono, HWND hEdad, HWND hGenero) {}
+void limpiarDatosCitas(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellidoM, HWND hEmail, HWND hTelefono, HWND hEdad, HWND hGenero) {}
+void limpiarDatosEspecialidad(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellidoM) {}
 
-/*void guardarArchivo() {
-	tipoBusqueda busqueda;
-	switch (busqueda) {
-		case bPaciente:{
-			break;
-		}
-		case bMedico: {
-			break;
-		}
-		case bConsulta: {
-			break;
-		}
-		case bEspecialidad: {
-			break;
-		}
-	}
-}*/
-//prueba 
-template <typename LL>
- LL buscar() {};
- // fin de prueba, no se termino 
-///
+//-LIBERAR MEMORIAS -//
 
+void liberarpunteros(){
 
-
-/*-----WINAPI------*/
-
+}
+#pragma region Ventanas
 //menu  (solo aparece en pantalla principal)
 HMENU hMenuCitas;
 ///  ventanas
@@ -196,7 +340,6 @@ LRESULT CALLBACK cVentanaConsultas(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK cVentanaEspecialidades(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK cVentanaReporte(HWND, UINT, WPARAM, LPARAM);
 // LRESULT CALLBACK cVentanaEasterEGG(HWND, UINT, WPARAM, LPARAM);		//Ventana de algo más?
-
 void centrarVentana(HWND hwnd) {
 	RECT rectVentana, rectPantalla;
 	// Obtener el tamaño de la ventana
@@ -212,97 +355,45 @@ void centrarVentana(HWND hwnd) {
 	SetWindowPos(hwnd, nullptr, posX, posY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
-
-
-
-
-#pragma region intentoTemplate
+//LOGICA DIAGNOSTICO
 /*
-template <typename  LL>
-struct miembroLista {
-	LL tipoLista;
-	miembroLista<LL>* sig;
-	miembroLista<LL>* ant;
-	miembroLista(const LL& valor) : tipoLista(valor), sig(nullptr), ant(nullptr) {}
-};  // la estructura anterior es como hacer una estructura (medico,paciente,etc) anidada en miembro list
-
-struct coso {
-
-	int x;
-} *vamos;
-
-template <typename LL>
-class listaLigadaDoble{
-	miembroLista<LL>* cabeza;
-	miembroLista<LL>* cola;
-public:
-	listaLigadaDoble() : cabeza(nullptr), cola(nullptr) {}
-
-
-	void insertar(const LL& valor) {
-		miembroLista<LL>* nuevo = new miembroLista<LL>(valor);
-		if (!cabeza) {
-			cabeza = cola = nuevo;
-		}
-		else {
-			cola->sig = nuevo;
-			nuevo->ant = cola;
-			cola = nuevo;
-		}
-	}
-
-	void mostrar() {
-		miembroLista<LL>* actual = cabeza;
-		while (actual) {
-			cout << actual->dato << " ";
-			actual = actual->sig;
-		}
-		cout << endl;
-	}
+*
+int len = GetWindowTextLength(hDiagnostico) + 1;  // +1 para el '\0'
+std::vector<char> buffer(len);  // Usamos vector en vez de arreglo estático
+GetWindowText(hDiagnostico, buffer.data(), len);  // buffer.data() obtiene el puntero a los datos internos
+// esto usando vectory faltaria ver como convertir a string para la estructura o directamente en la estructura usarlo como
+//vector <char> diagnositco
+// aunque lo mejor sra usar char
+*
+*
+*
+*
+TIENE MEJOR ADAPTACION STRING CON WN API GRTACIAS AL CHAR*  es probable que de error con textos muy largos,
+pero por el momento parece que sera un texto razonable
+// parece que 1024 puede ser un buen diagnostico, pero mejor dejar dinamico
+	int le = GetWindowTextLength(hName)+1;
+	char* pbuffer= new char[le];
+	GetWindowText(hName, pbuffer, le);
+	pacienteActual->nombre = string(pbuffer);
 
 
+----------------------
+codigo
+-*------------
+	delete[] pbuffer;
 
 
-	// Guardar lista en archivo binario
-	void guardarEnArchivo(const string& nombreArchivo) {
-		ofstream archivo(nombreArchivo, ios::binary);
-		if (!archivo) {
-			cerr << "Error al abrir el archivo para escritura: " << nombreArchivo << endl;
-			return;
-		}
+	///////////////////////////////////////////////
 
-		Nodo<LL>* actual = cabeza;
-		while (actual) {
-			archivo.write(reinterpret_cast<char*>(&actual->dato), sizeof(T));
-			actual = actual->sig;
-		}
-		archivo.close();
-		cout << "Datos guardados en " << nombreArchivo << endl;
-	}
+	//Sin embargo, si el texto es muy largo (varios megabytes o más),
+es posible que debas considerar estrategias de manejo de memoria más robustas
+(como cargar el texto por partes o usar otro tipo de contenedores,
+como std::vector<char> o std::string, que gestionan la memoria de manera más eficiente).
 
-	// Cargar lista desde archivo binario
-	void cargarDesdeArchivo(const string& nombreArchivo) {
-		ifstream archivo(nombreArchivo, ios::binary);
-		if (!archivo) {
-			cerr << "Error al abrir el archivo para lectura: " << nombreArchivo << endl;
-			return;
-		}
+	Por ejemplo, en lugar de:
+	char* buffer = new char[len];
+	Puedes usar:
+	td::vector<char> buffer(len);
+	*/
 
-		T valor;
-		while (archivo.read(reinterpret_cast<char*>(&valor), sizeof(T))) {
-			insertar(valor);
-		}
-		archivo.close();
-		cout << "Datos cargados desde " << nombreArchivo << endl;
-	}
-
-	~listaLigadaDoble() {
-		miembroLista<LL>* actual = cabeza;
-		while (actual) {
-			miembroLista<LL>* temp = actual;
-			actual = actual->sig;
-			delete temp;
-		}
-	}
-};*/
 #pragma endregion
