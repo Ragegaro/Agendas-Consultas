@@ -27,7 +27,6 @@ struct paciente {
 	string apellidoMaterno;
 	string correo;
 	int telefono;
-
 	bool genero;
 	short edad;
 	paciente* ant;
@@ -60,14 +59,17 @@ struct consultas {
 ///--- Lista extra de las sugeridas para el manejo de especialidades ---///
 struct especialidad {
 	
-	char clave[3];
+	char clave[4];
 	string defEspecialidad;
 	especialidad *sig;
 	especialidad* ant;
 } *espeIni, *espeFin, *espeActual;
 
+
 #pragma endregion
 
+
+#pragma region opLL
 template<typename LL>
 void agregarNodo(LL*& inicio, LL*& fin, LL* aux) {
 	if (inicio!= nullptr) {	
@@ -86,26 +88,29 @@ void agregarNodo(LL*& inicio, LL*& fin, LL* aux) {
 /* AGREGA AL FINAL DE LA LISTA------------FORMA DE USAR LA FUNCION AGREGAR NODO
 agregarNodo(medicoIni, medicoFinal, MedicoActual);	agregarNodo(consultasIni, consultasFin, consulActual); agregarNodo(espeIni, espeFin, espeActual);
 */
-
-/*
 template <typename LL>
-void eliminarNodo(LL*& inicio, LL*& fin, LL* aux) {
-	if (aux == nullptr) return;
-	if (aux == inicio) {
-		inicio = aux->sig;
-		if (inicio != nullptr) inicio->ant = nullptr;
-	}
-	else if (aux == fin) {
-		fin = aux->ant;
-		if (fin != nullptr) fin->sig = nullptr;
-	}
-	else {
-		aux->ant->sig = aux->sig;
-		aux->sig->ant = aux->ant;
-	}
-	delete aux;
+void eliminarNodo(LL*& inicio, LL*& fin, LL* nodo) {
+	if (!nodo) return;
+
+	if (nodo == inicio)  // Si es el primer nodo
+		inicio = nodo->sig;
+
+	// Si es el último nodo
+	if (nodo == fin)
+		fin = nodo->ant;
+
+	// Enlazar los nodos adyacentes
+	if (nodo->ant)
+		nodo->ant->sig = nodo->sig;
+	if (nodo->sig)
+		nodo->sig->ant = nodo->ant;
+
+	delete nodo;
 }
-*/
+
+//-Modificar listas esta directamente en WIN API-//
+#pragma endregion
+
 
 #pragma region busquedaBinaria
 template<typename LL>
@@ -118,7 +123,6 @@ int ContarNodos(LL* inicio) {
 	}
 	return contador;
 }
-
 template<typename LL>
 LL* obtenerNodoPorIndice(LL* inicio, int indice){
 	LL* aux = inicio;
@@ -129,7 +133,6 @@ LL* obtenerNodoPorIndice(LL* inicio, int indice){
 	}
 	return aux;
 }
-
 template <typename LL>
 LL* BusquedaBinariaID (LL* inicio, int idBuscado){
 	int izquierda = 0, derecha = ContarNodos(inicio) - 1; 
@@ -147,7 +150,6 @@ LL* BusquedaBinariaID (LL* inicio, int idBuscado){
 	}
 	return nullptr;
 }
- 
 #pragma endregion
 
 #pragma region quickSortPac_ID
@@ -161,7 +163,6 @@ void intercambiarDatosPaciente(paciente* a, paciente * b){
 	swap(a->genero, b->genero);
 	swap(a->edad, b->edad);
 }
-
 // Partición para quicksort (por ID)
 paciente* partition(paciente* low, paciente* high) {
 	int pivote = high->id;
@@ -191,17 +192,6 @@ void quicksortPacientes(paciente* low, paciente* high) {
 #pragma endregion
 
 
-
-
-
-
-
-
-
-/* Quicksort */
-
-
-
 template <typename LL>
 bool idBuscado(LL* tipoBusquedaIni,int idBuscado){
 	LL* aux = tipoBusquedaIni;
@@ -211,7 +201,6 @@ bool idBuscado(LL* tipoBusquedaIni,int idBuscado){
 	}
 	return false;
 }
-
 
 template<typename LL>
 LL buscarNombre_Lineal( LL*& inicio,LL* actual){
@@ -225,45 +214,11 @@ LL buscarApellido_Lineal(LL*& inicio, LL* actual) {}
 
 //medicos y pacientes 
 template <typename LL>
-void quicksort_ID(LL) {}
+
 // citas 
 void mergesort_ID(){}
 
-/*
-template<typename LL>
-void leerArchivos(const string  nombreArchivo) {
-	ifstream archivo("prueba de lsita ligada.txt");
-	if (!archivo.is_open()) {
-		cout << " archivo no se pudo abrir \n"; return;
-	}
-	string linea;
-	while (archivo != NULL) {
-		getline(archivo, linea);
-		agregarNodo(LL,LL,LL);
-
-
-	}
-
-
-}
-
-
-void leerArchivos() {
-
-	ifstream archivo("prueba de lsita ligada.txt");
-	if (!archivo.is_open()) {
-		cout << " archivo no se pudo abrir \n"; return;
-	}
-
-	string linea;
-	while (getline(archivo, linea)) {
-		cout << linea << endl;
-	}
-	archivo.close();
-}
-
-*/
-void guardarEnArchivos(paciente* Ini) {
+void ASASguardarEnArchivos(paciente* Ini) {
 
 	
 	ofstream archivo("prueba de lsita ligada.txt",ios::app);
@@ -296,53 +251,16 @@ void guardarEnArchivos(paciente* Ini) {
 
 }
 
+void guardarPacienteBin(paciente* Ini, const string& nombreArchivo) {
+	ofstream Archivo(nombreArchivo, ios::binary | ios::trunc);
+	if (!Archivo.is_open()) { MessageBox(NULL, "Error al Abrir el archivo", "Error", MB_ICONERROR); return; }
+	pacienteActual = Ini;
+
+}
+
 void guardarEnArchivosMedicos(medicos* Ini) {
-	ofstream archivo("prueba de lsita ligada.txt", ios::app);
-	if (!archivo.is_open()) {
-		cout << " archivo no se pudo abrir \n"; return;
-	}
-	if (Ini == nullptr) {
-		archivo << "No hay pacientes registrados." << endl;
-		archivo.close();
-		return;
-	}
-	while (Ini != nullptr) {
-		archivo << "ID: " << Ini->id << endl;
-		archivo << "Nombre: " << Ini->nombre << " " << Ini->apellidoPaterno << " " << Ini->apellidoMaterno << endl;
-		archivo << "Correo: " << Ini->email << endl;
-		archivo << "Teléfono: " << Ini->telefono << endl;
-		archivo << "Especialidad: " << Ini->especialidad << endl;
-		archivo << "----------------------------------------" << endl;
-		Ini = Ini->sig;
-	}
-	archivo.close();
 }
 
-template <typename T>
-void eliminarNodo(T*& inicio, T*& fin, T* nodo) {
-	if (!nodo) return;
-
-	// Si es el primer nodo
-	if (nodo == inicio)
-		inicio = nodo->sig;
-
-	// Si es el último nodo
-	if (nodo == fin)
-		fin = nodo->ant;
-
-	// Enlazar los nodos adyacentes
-	if (nodo->ant)
-		nodo->ant->sig = nodo->sig;
-	if (nodo->sig)
-		nodo->sig->ant = nodo->ant;
-
-	delete nodo; 
-}
-//-Modificar listas-//
-
-void modificarMedico() {}
-void modificarCitas() {}
-void modificarEspecialidad() {}
 
 //-OBTENER DATOS DE WIN API-//
 void obtenerDatosPaciente(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellidoM, HWND hEmail, HWND hTelefono, HWND hEdad, HWND hGenero, paciente* pacienteActual) {
@@ -394,15 +312,6 @@ void limpiarDatosPaciente(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellido
 void limpiarDatosMedicos(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellidoM, HWND hEmail, HWND hTelefono, HWND hEdad, HWND hGenero) {}
 void limpiarDatosCitas(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellidoM, HWND hEmail, HWND hTelefono, HWND hEdad, HWND hGenero) {}
 void limpiarDatosEspecialidad(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellidoM) {}
-
-
-//-CARGA DATOS DESDE LISTBOX-//
-void cargarDatosPaciente(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellidoM, HWND hEmail, HWND hTelefono, HWND hEdad, HWND hGenero) {}
-void cargarDatosMedicos(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellidoM, HWND hEmail, HWND hTelefono, HWND hEdad, HWND hGenero) {}
-void cargarDatosCitas(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellidoM, HWND hEmail, HWND hTelefono, HWND hEdad, HWND hGenero) {}
-void cargarDatosEspecialidad(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellidoM) {}
-
-
 
 //-LIBERAR MEMORIAS -//
 

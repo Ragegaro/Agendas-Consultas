@@ -114,3 +114,4 @@ borrar
 Mujer
 Edad: 0
 ----------------------------------------
+No hay pacientes registrados.
