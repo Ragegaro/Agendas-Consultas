@@ -4,18 +4,15 @@ using namespace std;
 #include"resource.h"
 #include "Declaraciones.h"
 
-//#include <gl/>
-
-//  "DATA GRID" EN WIN API  //
-#include <commctrl.h>
-#pragma comment(lib, "comctl32.lib")
-//////////////////////////////////////
 
 
 
 int WINAPI WinMain(HINSTANCE hInst,HINSTANCE hPrev,PSTR cmdLine,int cShow) {
 	
 	hVentanaPrincipal = CreateDialog(hInst,MAKEINTRESOURCE (DLG_PRINCIPAL),NULL, cVentanaPrincipal);
+    leerPacienteBin("paciente.bin");
+    leerEspecialidadBin("Especialidad.bin");
+    //leerEspecialidadBin("paciente.bin");
 	MSG msg;
 	ZeroMemory(&msg,sizeof(MSG));
 	ShowWindow(hVentanaPrincipal,cShow);
@@ -24,8 +21,10 @@ int WINAPI WinMain(HINSTANCE hInst,HINSTANCE hPrev,PSTR cmdLine,int cShow) {
 		DispatchMessage(&msg);
 	}
    
-    guardarEnArchivos(pacienteIni);
+   // guardarEnArchivos(pacienteIni);
     
+    guardarPacienteBin(pacienteIni, "paciente.bin");
+    guardarEspecialidadBin(espeIni, "Especialidad.bin");
     
 
 	return 0;
@@ -119,7 +118,7 @@ LRESULT CALLBACK cVentanaPrincipal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
     case WM_INITDIALOG: {
     hMenuCitas = LoadMenu(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_MENU1));
     if (hMenuCitas) { SetMenu(hwnd, hMenuCitas); DrawMenuBar(hwnd); }
-    centrarVentana(hwnd);
+     
     } break;
 
     case WM_COMMAND: {
@@ -187,11 +186,15 @@ LRESULT CALLBACK cVentanaPaciente(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
     HWND hTelefono = GetDlgItem(hwnd, PAC_CAP_telefonoPaciente);
     HWND hGenero = GetDlgItem(hwnd, PAC_COMBO_generoPaciente);
     HWND hEdad = GetDlgItem(hwnd, PAC_CAP_edadPaciente);
+
     HWND hListBox = GetDlgItem(hwnd, PAC_LIST_ALLpacientes);
     HWND hbotonGuardar = GetDlgItem(hwnd, PAC_BTN_guardar);
-    HWND hbotonBuscar = GetDlgItem(hwnd, PAC_BTN_buscar);
+    
 
     paciente* pacienteVacio = new paciente;
+    pacienteVacio->id = 0;  // ID especial para paciente vacío
+    pacienteVacio->nombre = "Nuevo Paciente";
+    pacienteVacio->sig = nullptr;pacienteVacio->ant = nullptr;
 
 
     switch (msg) {
@@ -200,16 +203,10 @@ LRESULT CALLBACK cVentanaPaciente(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         SendMessage(hGenero, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ("HOMBRE"));
         SendMessage(hGenero, CB_ADDSTRING, 0, reinterpret_cast<LPARAM> ("MUJER"));
         SendMessage(hGenero, CB_SETCURSEL, 2, 0);
-        centrarVentana(hwnd);
-
-        pacienteVacio->id = 0;  // ID especial para paciente vacío
-        pacienteVacio->nombre = "Nuevo Paciente";
-
+         
         // Agregar el paciente vacío al list box
-        char msgBuffer[256];
-        sprintf_s(msgBuffer, "%d - %s", pacienteVacio->id, pacienteVacio->nombre.c_str());
-        int index = (int)SendMessage(hListBox, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(msgBuffer));
-        SendMessage(hListBox, LB_SETITEMDATA, index, (LPARAM)pacienteVacio->id);
+        
+        LlenarlistBox(hListBox, pacienteIni, pacienteVacio);
 
         // Establecer el paciente vacío como seleccionado       
         // Aquí puedes realizar más inicializaciones si es necesario
@@ -219,15 +216,15 @@ LRESULT CALLBACK cVentanaPaciente(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 
         switch (LOWORD(wParam)) {
         case PAC_LIST_ALLpacientes: {
+            //leerPacienteBin("paciente.bin");
             if (HIWORD(wParam) == LBN_SELCHANGE) {
                 int selectedIndex = SendMessage(hListBox, LB_GETCURSEL, 0, 0);
                 char buffer[256];
                 if (selectedIndex != LB_ERR) {
                     if (selectedIndex != 0) {
-                        int idPaciente = SendMessage(hListBox, LB_GETITEMDATA, selectedIndex, 0);
-                        paciente* aux = pacienteIni;
+                        paciente* aux =(paciente*)SendMessage(hListBox, LB_GETITEMDATA, selectedIndex, 0);
                         while (aux) {
-                            if (aux->id == idPaciente) {
+                            if (aux != nullptr) {
                                 SetWindowText(hNum, to_string(aux->id).c_str());
                                 SetWindowText(hName, aux->nombre.c_str());
                                 SetWindowText(hApellidoP, aux->apellidoPaterno.c_str());
@@ -242,6 +239,7 @@ LRESULT CALLBACK cVentanaPaciente(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                             }
                             aux = aux->sig;
                         }
+                        
                     }
                     else {
                         limpiarDatosPaciente(hNum, hName, hApellidoP, hApellidoM, hEmail, hTelefono, hEdad, hGenero);
@@ -274,22 +272,8 @@ LRESULT CALLBACK cVentanaPaciente(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                     limpiarDatosPaciente(hNum, hName, hApellidoP, hApellidoM, hEmail, hTelefono, hEdad, hGenero);
 
                     SendMessage(hListBox, LB_RESETCONTENT, 0, 0);
-
-                    pacienteVacio->id = 0;  // ID especial para paciente vacío
-                    pacienteVacio->nombre = "Nuevo Paciente";
-                    sprintf_s(msgBuffer, "%d - %s", pacienteVacio->id, pacienteVacio->nombre.c_str());
-                    int index = (int)SendMessage(hListBox, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(msgBuffer));
-                    SendMessage(hListBox, LB_SETITEMDATA, index, (LPARAM)pacienteVacio->id);
-                    paciente* aux = pacienteIni;
-
-                    while (aux != nullptr) {
-                        sprintf_s(msgBuffer, "%d - %s %s %s - %s ", aux->id, aux->nombre.c_str(),
-                            aux->apellidoPaterno.c_str(), aux->apellidoMaterno.c_str(), aux->genero ? "Hombre" : "Mujer");
-                        // PARTE CLAVE
-                        int index = (int)SendMessage(hListBox, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(msgBuffer));
-                        SendMessage(hListBox, LB_SETITEMDATA, index, (LPARAM)aux->id);
-                        aux = aux->sig;
-                    }
+                    LlenarlistBox(hListBox, pacienteIni, pacienteVacio);
+                   
 
                 }
             }
@@ -313,22 +297,13 @@ LRESULT CALLBACK cVentanaPaciente(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 
                 if (selectedIndex != LB_ERR) {
                     // Borra la línea seleccionada
-                    SendMessage(hListBox, LB_DELETESTRING, selectedIndex, 0);
+                    SendMessage(hListBox, LB_RESETCONTENT, 0, 0);
 
                     // Prepara el nuevo texto
-                    char msgBuffer[256];
-                    sprintf_s(msgBuffer, "%d - %s %s %s - %s",
-                        PacienteSeleccionado->id,
-                        PacienteSeleccionado->nombre.c_str(),
-                        PacienteSeleccionado->apellidoPaterno.c_str(),
-                        PacienteSeleccionado->apellidoMaterno.c_str(),
-                        PacienteSeleccionado->genero ? "Hombre" : "Mujer"
-                    );
+                    LlenarlistBox(hListBox,pacienteIni,pacienteVacio);
                     EnableWindow(hNum, TRUE);
                     EnableWindow(hbotonGuardar, TRUE);
 
-                    int newIndex = (int)SendMessage(hListBox, LB_INSERTSTRING, selectedIndex, (LPARAM)msgBuffer);
-                    SendMessage(hListBox, LB_SETITEMDATA, newIndex, PacienteSeleccionado->id);
                     limpiarDatosPaciente(hNum, hName, hApellidoP, hApellidoM, hEmail, hTelefono, hEdad, hGenero);
                     EnableWindow(hNum, TRUE);
                     EnableWindow(hbotonGuardar, TRUE);
@@ -338,41 +313,30 @@ LRESULT CALLBACK cVentanaPaciente(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 
             delete PacienteSeleccionado;
         } break;
-
-
         case PAC_BTN_borrar: {
             paciente* elimnar = new paciente;
             obtenerDatosPaciente(hNum, hName, hApellidoP, hApellidoM, hEmail, hTelefono, hEdad, hGenero, elimnar);
             paciente* encontrado = BusquedaBinariaID(pacienteIni, elimnar->id);
             if (encontrado) {
-                eliminarNodo<paciente>(pacienteIni, pacienteFin, encontrado);
-
+                eliminarNodo(pacienteIni, pacienteFin, encontrado);
                 int selectedIndex = (int)SendMessage(hListBox, LB_GETCURSEL, 0, 0);
                 if (selectedIndex != LB_ERR) {
                     SendMessage(hListBox, LB_DELETESTRING, selectedIndex, 0);
                 }
-
                 limpiarDatosPaciente(hNum, hName, hApellidoP, hApellidoM, hEmail, hTelefono, hEdad, hGenero);
 
             }
             delete elimnar;
-
+            EnableWindow(hNum, TRUE);
 
         }break;
-
-
         case PAC_BTN_buscar: {
-
-
             paciente* filtro = new paciente;
             obtenerDatosPaciente(hNum, hName, hApellidoP, hApellidoM, hEmail, hTelefono, hEdad, hGenero, filtro);
 
             // Limpiar el ListBox antes de mostrar los resultados
             SendMessage(hListBox, LB_RESETCONTENT, 0, 0);
             char msgBuffer[256];
-            paciente* pacienteVacio = new paciente;
-            pacienteVacio->id = 0;  // ID especial para paciente vacío
-            pacienteVacio->nombre = "Nuevo Paciente";
             sprintf_s(msgBuffer, "%d - %s", pacienteVacio->id, pacienteVacio->nombre.c_str());
             int index = (int)SendMessage(hListBox, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(msgBuffer));
             SendMessage(hListBox, LB_SETITEMDATA, index, (LPARAM)pacienteVacio->id);
@@ -389,8 +353,8 @@ LRESULT CALLBACK cVentanaPaciente(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                 if (filtro->telefono != 0 && temp->telefono != filtro->telefono) coincide = false;
                 if (filtro->edad != 0 && temp->edad != filtro->edad) coincide = false;
 
-                int generoSeleccionado = (int)SendMessage(hGenero, CB_GETCURSEL, 0, 0);
-                if (generoSeleccionado != CB_ERR && temp->genero != filtro->genero) coincide = false;
+                //                int generoSeleccionado = (int)SendMessage(hGenero, CB_GETCURSEL, 0, 0);
+                                //if (generoSeleccionado != CB_ERR && temp->genero != filtro->genero) coincide = false;
 
                 if (coincide) {
                     char buffer[256];
@@ -411,54 +375,114 @@ LRESULT CALLBACK cVentanaPaciente(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                 "Para mostrar todos los pacientes deje en blanco los campos y presione buscar.", // Mensaje a mostrar
                 "Advertencia", // Título del MessageBox
                 MB_OK | MB_ICONWARNING); // Tipo de MessageBox (sólo OK y un ícono de advertencia)
-
-
-            delete pacienteVacio;
             delete filtro;
-        }
+        }break;
+        case PAC_BTN_regresar: {
+            delete pacienteVacio;
+            DestroyWindow(hwnd);
+            ShowWindow(hVentanaPrincipal, SW_SHOW);
         } break;
 
-
-    case PAC_BTN_regresar: {
-        DestroyWindow(hwnd);
-        ShowWindow(hVentanaPrincipal, SW_SHOW);
-    } break;
-
-    }
-                   break;
-
+        }
+    } break;        
     case WM_CLOSE: {
 
         delete pacienteVacio;
         DestroyWindow(hwnd);
         ShowWindow(hVentanaPrincipal, SW_SHOW);
-
-
         break;
     }
     }
 
-
+    
 return FALSE;
 
 }
 
-
 LRESULT CALLBACK cVentanaMedicos(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam){ 
-    centrarVentana(hwnd);
+    
+    HWND hNum = GetDlgItem(hwnd, MED_CAP_cedulaMed);
+    HWND hName = GetDlgItem(hwnd, MED_CAP_nombreMed);
+    HWND hApellidoP = GetDlgItem(hwnd, MED_CAP_ApePatMed);
+    HWND hApellidoM = GetDlgItem(hwnd, MED_CAP_ApeMatMed);
+    HWND hEmail = GetDlgItem(hwnd, MED_CAP_email);
+    HWND hTelefono = GetDlgItem(hwnd, MED_CAP_telefono);
+    HWND hEspecialidad = GetDlgItem(hwnd, MED_COMBO_especialidad);
+    
+
+    HWND hListBox = GetDlgItem(hwnd, MED_LIST_ALLmed);
+    HWND hbotonGuardar = GetDlgItem(hwnd, MED_BTN_agregar);
+
+    medicos* medicoVacio = new medicos;
+    medicoVacio->id = 0;  // ID especial para paciente vacío
+    medicoVacio->nombre = "Nuevo Paciente";
+    medicoVacio->sig = nullptr;
     switch (msg) {
+        case WM_INITDIALOG: {
+
+            SendMessage(hEspecialidad, CB_RESETCONTENT, 0, 0);
+            SendMessage(hEspecialidad, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>("Seleccione"));
+            SendMessage(hEspecialidad
+                , CB_SETCURSEL, 0, 0);
+            especialidad*actual = espeIni;
+            while (actual != nullptr) {
+
+                SendMessage(hEspecialidad, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(actual->defEspecialidad.c_str()));
+                actual = actual->sig;
+            }
+
+
+        } break;
+
+        case WM_COMMAND: {
+            switch (LOWORD(wParam)) {
+            case MED_BTN_agregar:{
+            
+            
+            }break;
+            case MED_BTN_Mod:{}break;
+            case MED_BTN_borrar: {}break;
+            case MED_BTN_masEspeci: {
+                AbiertaDesdeMedicos = true;
+                DialogBox(GetModuleHandle(NULL),MAKEINTRESOURCE(DLG_ESPECIALIDAD),hwnd,cVentanaEspecialidades);
+                AbiertaDesdeMedicos = false;
+                SendMessage(hEspecialidad, CB_RESETCONTENT, 0, 0);
+                SendMessage(hEspecialidad, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>("Seleccione"));
+                SendMessage(hEspecialidad
+                    , CB_SETCURSEL, 0, 0);
+                especialidad* actual = espeIni;
+                while (actual != nullptr) {
+
+                    SendMessage(hEspecialidad, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(actual->defEspecialidad.c_str()));
+                    actual = actual->sig;
+                }
+
+                
+
+            
+            }break;
+            case MED_BTN_buscar:{}break;
+            case MED_BTN_regresar: {
+                delete medicoVacio;
+                DestroyWindow(hwnd);
+                //hVentanaPrincipal;
+                ShowWindow(hVentanaPrincipal, SW_SHOW);
+
+            }break;
+             }
+        }break;
+        
         case WM_CLOSE: {
+            delete medicoVacio;
             DestroyWindow(hwnd);
-            hVentanaPrincipal; 
             ShowWindow(hVentanaPrincipal, SW_SHOW);
-            break;
-        }
+        }break;
     }    
     return FALSE;
 }
 
 LRESULT CALLBACK cVentanaConsultas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    centrarVentana(hwnd);
+     
     switch (msg) {
     case WM_CLOSE: {
         DestroyWindow(hwnd);
@@ -470,19 +494,166 @@ LRESULT CALLBACK cVentanaConsultas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
     return FALSE; }
 
 LRESULT CALLBACK cVentanaEspecialidades(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) { 
-    centrarVentana(hwnd);
+    HWND hClave = GetDlgItem(hwnd, ESP_CAP_clvEspecialidad);
+    HWND hespecialidad= GetDlgItem(hwnd, ESP_CAP_especialidad);
+    
+
+    HWND hlistEsp = GetDlgItem(hwnd, ESP_LIST_Especialidades);
+    HWND hlistAgregar = GetDlgItem(hwnd, ESP_BTN_agregarEsp);
+    HWND hBtnEliminar = GetDlgItem(hwnd, ESP_BTN_elimiEsp);
+    HWND hBtnPrinicpal= GetDlgItem(hwnd, ESP_BTN_regresarPrincipal);
+    HWND hBtndoctor = GetDlgItem(hwnd, ESP_BTN_regresarDoctor);
+
+    especialidad* vacio = new especialidad;
+    strcpy_s(vacio->clave, "0");  // copiar "0" en clave
+    vacio->defEspecialidad = "Nueva especialidad";
+    vacio->sig = nullptr;
+    vacio->ant = nullptr;
+
+
     switch (msg) {
+
+    case WM_INITDIALOG: {
+        LlenarListBoxEspecialidades(hlistEsp, espeIni, vacio);
+
+
+        if (AbiertaDesdeMedicos) {
+
+            EnableWindow(hBtnEliminar, FALSE);
+            EnableWindow(hBtnPrinicpal, FALSE);
+            EnableWindow(hBtndoctor, true);
+        }
+        else {
+            EnableWindow(hBtnEliminar, true);
+            EnableWindow(hBtnPrinicpal, true);
+            EnableWindow(hBtndoctor, FALSE);
+        }
+        return TRUE;
+    }break;
+
+    case WM_COMMAND: {
+        switch (LOWORD(wParam)) {
+        case ESP_LIST_Especialidades: {
+            if (HIWORD(wParam) == LBN_SELCHANGE) {
+                int index = (int)SendMessage(hlistEsp, LB_GETCURSEL, 0, 0);
+                if (index != LB_ERR) {
+                    especialidad* seleccionada = (especialidad*)SendMessage(hlistEsp, LB_GETITEMDATA, index, 0);
+
+                    if (seleccionada != nullptr) {
+                        // Verificamos si es la opción vacía (clave "0" o cadena vacía)
+                        if (strcmp(seleccionada->clave, "0") == 0 || strlen(seleccionada->clave) == 0) {
+                            SetWindowText(hClave, "");
+                            SetWindowText(hespecialidad, "");
+                            EnableWindow(hlistAgregar, TRUE);
+                            EnableWindow(hClave, TRUE);
+                            EnableWindow(hespecialidad, TRUE);
+                        }
+                        else {
+                            SetWindowText(hClave, seleccionada->clave);
+                            SetWindowText(hespecialidad, seleccionada->defEspecialidad.c_str());
+                            EnableWindow(hlistAgregar, FALSE);
+                            EnableWindow(hClave, FALSE);
+                            
+                        }
+                    }
+                }
+            }
+        } break;
+
+        case ESP_BTN_agregarEsp: {
+            espeActual = new especialidad;
+            obtenerDatosEspecialidad(hClave, hespecialidad, espeActual);
+            if (strcmp(espeActual->clave, "0") == 0) {
+                MessageBox(hwnd, "No se puede agregar una especialidad con clave 0.", "Error", MB_OK | MB_ICONERROR);
+                delete espeActual; // liberar memoria
+                break;
+            }
+            if (claveEspecialidadRepetida(espeIni, espeActual->clave)) {
+                MessageBox(hwnd, "Ya existe una especialidad con esa clave.", "Error", MB_ICONERROR);
+                delete espeActual;
+                break;
+            }
+
+            agregarNodo(espeIni, espeFin, espeActual);
+            limpiarDatosEspecialidad(hClave, hespecialidad);
+
+            SendMessage(hlistEsp, LB_RESETCONTENT, 0, 0);
+            LlenarListBoxEspecialidades(hlistEsp, espeIni, vacio);
+        
+        }break;
+        case ESP_BTN_modEsp: {
+            especialidad* seleccion = new especialidad;
+            obtenerDatosEspecialidad(hClave, hespecialidad, seleccion);
+
+            // Buscar por clave
+            especialidad* encontrada = espeIni;
+            while (encontrada != nullptr && strcmp(encontrada->clave, seleccion->clave) != 0) {
+                encontrada = encontrada->sig;
+            }
+
+            if (encontrada) {
+                // Actualizar definición
+                encontrada->defEspecialidad = seleccion->defEspecialidad;
+
+                // Refrescar ListBox
+                SendMessage(hlistEsp, LB_RESETCONTENT, 0, 0);
+                LlenarListBoxEspecialidades(hlistEsp, espeIni, vacio);
+                limpiarDatosEspecialidad(hClave, hespecialidad);
+            }
+            else {
+                MessageBox(hwnd, "No se encontró la especialidad para modificar.", "Error", MB_ICONERROR);
+            }
+
+            delete seleccion;
+        } break;
+        case ESP_BTN_elimiEsp: {
+            int index = (int)SendMessage(hlistEsp, LB_GETCURSEL, 0, 0);
+            if (index != LB_ERR) {
+                especialidad* seleccionada = (especialidad*)SendMessage(hlistEsp, LB_GETITEMDATA, index, 0);
+
+                // No eliminar si es la especialidad vacía
+                if (strcmp(seleccionada->clave, "0") == 0) {
+                    MessageBox(hwnd, "No se puede eliminar la especialidad vacía.", "Aviso", MB_ICONINFORMATION);
+                    break;
+                }
+
+                eliminarNodo(espeIni, espeFin, seleccionada); // Asegúrate de tener esta función implementada
+
+                SendMessage(hlistEsp, LB_RESETCONTENT, 0, 0);
+                LlenarListBoxEspecialidades(hlistEsp, espeIni, vacio);
+                limpiarDatosEspecialidad(hClave, hespecialidad);
+            }
+            else {
+                MessageBox(hwnd, "Seleccione una especialidad para eliminar.", "Aviso", MB_ICONWARNING);
+            }
+        } break;
+        case ESP_BTN_regresarDoctor: {
+            EndDialog(hwnd, 0);
+        }break;
+        case ESP_BTN_regresarPrincipal: {
+            DestroyWindow(hwnd);
+            hVentanaPrincipal;
+            ShowWindow(hVentanaPrincipal, SW_SHOW);
+        } break;
+        }
+        
+    }break;
+
     case WM_CLOSE: {
-        DestroyWindow(hwnd);
-        hVentanaPrincipal;
-        ShowWindow(hVentanaPrincipal, SW_SHOW);
+        if (AbiertaDesdeMedicos) {EndDialog(hwnd, 0);
+    }
+        else {
+            DestroyWindow(hwnd);
+            hVentanaPrincipal;
+            ShowWindow(hVentanaPrincipal, SW_SHOW);
+        }
         break;
     }
     }
     return FALSE; }
 
 LRESULT CALLBACK cVentanaReporte(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) { 
-    centrarVentana(hwnd);
+     
     switch (msg) {
     case WM_CLOSE: {
         DestroyWindow(hwnd);

@@ -1,2 +1,2 @@
-1. Pantalla de pacietenes al agregar algun pacietnet con iun id menor al que ya exixste se duplica el ultimo que se agrego y es mayor a ese
+1. eliminar los punteros que quedan flotando
 
