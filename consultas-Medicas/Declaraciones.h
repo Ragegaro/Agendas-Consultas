@@ -2,6 +2,7 @@
 #include <string>
 #include <fstream>
 #include<iostream>
+#include <commctrl.h>
 // template<typename LL>
 using namespace std;
 
@@ -15,7 +16,7 @@ struct medicos {
 	string email;
 	int telefono;
 
-	string especialidad;//creo que se podria hacer con algun entero y buscar en el archivo segun ese entero o con lista ligada
+	string especialidad;//creo que se podria hacer con algun entero y buscar en el archivo segun ese entero o con lista ligada de especialidades 
 	medicos* ant;
 	medicos* sig;
 } *medicoIni= nullptr, *medicoFinal = nullptr, *MedicoActual = nullptr;
@@ -68,7 +69,6 @@ struct especialidad {
 
 #pragma endregion
 
-
 #pragma region opLL
 template<typename LL>
 void agregarNodo(LL*& inicio, LL*& fin, LL* aux) {
@@ -88,6 +88,19 @@ void agregarNodo(LL*& inicio, LL*& fin, LL* aux) {
 /* AGREGA AL FINAL DE LA LISTA------------FORMA DE USAR LA FUNCION AGREGAR NODO
 agregarNodo(medicoIni, medicoFinal, MedicoActual);	agregarNodo(consultasIni, consultasFin, consulActual); agregarNodo(espeIni, espeFin, espeActual);
 */
+
+template <typename LL>
+void recorrerNodosCombobox(HWND hCOMBOBOX,LL* inicio) {
+	LL* actual = inicio;
+	SendMessage(hCOMBOBOX, CB_RESETCONTENT, 0, 0);
+
+	while (actual != NULL) {
+		SendMessage(hCOMBOBOX, CB_ADDSTRING, 0, (LPARAM)actual->dato.c_str());
+		actual = actual->siguiente;
+	}
+
+}
+
 template <typename LL>
 void eliminarNodo(LL*& inicio, LL*& fin, LL* nodo) {
 	if (!nodo) return;
@@ -110,7 +123,6 @@ void eliminarNodo(LL*& inicio, LL*& fin, LL* nodo) {
 
 //-Modificar listas esta directamente en WIN API-//
 #pragma endregion
-
 
 #pragma region busquedaBinaria
 template<typename LL>
@@ -202,6 +214,18 @@ bool idBuscado(LL* tipoBusquedaIni,int idBuscado){
 	return false;
 }
 
+bool claveEspecialidadRepetida(especialidad* inicio, const char* claveBuscada) {
+	especialidad* aux = inicio;
+	while (aux != nullptr) {
+		if (strcmp(aux->clave, claveBuscada) == 0)
+			return true;
+		aux = aux->sig;
+	}
+	return false;
+}
+
+
+#pragma region Implementar
 template<typename LL>
 LL buscarNombre_Lineal( LL*& inicio,LL* actual){
 
@@ -210,55 +234,261 @@ LL buscarNombre_Lineal( LL*& inicio,LL* actual){
 template<typename LL>
 LL buscarApellido_Lineal(LL*& inicio, LL* actual) {}
 
+//medicos y pacientes 
+// citas 
+void mergesort_ID() {}
+
 //consultas* buscarFecha_Lineal() {}
 
-//medicos y pacientes 
-template <typename LL>
-
-// citas 
-void mergesort_ID(){}
-
-void ASASguardarEnArchivos(paciente* Ini) {
-
-	
-	ofstream archivo("prueba de lsita ligada.txt",ios::app);
-	if (!archivo.is_open()) {
-		cout << " archivo no se pudo abrir \n"; return;
-	}
-	if (Ini == nullptr) {
-		archivo << "No hay pacientes registrados." << endl;
-		archivo.close();
-		return;
-	}
-
-	while (Ini != nullptr) {
-
-		archivo << Ini->id << endl;
-		archivo << Ini->nombre << " " << Ini->apellidoPaterno << " " << Ini->apellidoMaterno << endl;
-		archivo << Ini->correo << endl;
-		archivo << Ini->telefono << endl;
-		archivo <<(Ini->genero == 0 ? "Mujer" : "Hombre") << endl;
-		archivo << "Edad: " << Ini->edad << endl;
-		
-		archivo << "----------------------------------------" << endl;
-		
-		
-
-		Ini = Ini->sig;
-
-	}
-	archivo.close();
-
-}
+#pragma endregion
 
 void guardarPacienteBin(paciente* Ini, const string& nombreArchivo) {
 	ofstream Archivo(nombreArchivo, ios::binary | ios::trunc);
 	if (!Archivo.is_open()) { MessageBox(NULL, "Error al Abrir el archivo", "Error", MB_ICONERROR); return; }
 	pacienteActual = Ini;
+	while (pacienteActual != nullptr) {
+		Archivo.write(reinterpret_cast<char*>(&pacienteActual->id), sizeof(pacienteActual->id));
+		Archivo.write(reinterpret_cast<char*>(&pacienteActual->telefono), sizeof(pacienteActual->telefono));
+		Archivo.write(reinterpret_cast<char*>(&pacienteActual->genero), sizeof(pacienteActual->genero));
+		Archivo.write(reinterpret_cast<char*>(&pacienteActual->edad), sizeof(pacienteActual->edad));
+		auto guardarString = [&](const string& str) {
+			size_t len = str.size();
+			Archivo.write(reinterpret_cast<char*>(&len), sizeof(len));
+			Archivo.write(str.c_str(), len);
+		};
 
+		guardarString(pacienteActual->nombre);
+		guardarString(pacienteActual->apellidoPaterno);
+		guardarString(pacienteActual->apellidoMaterno);
+		guardarString(pacienteActual->correo);
+
+		pacienteActual = pacienteActual->sig;
+	}
+
+	Archivo.close();
+}
+void guardarMedicosBin(medicos* ini, const string& nombreArchivo) {
+	ofstream Archivo(nombreArchivo, ios::binary | ios::trunc);
+	if (!Archivo.is_open()) { MessageBox(NULL, "Error al abrir archivo", "Error", MB_ICONERROR); return; }
+
+	medicos* actual = ini;
+	while (actual != nullptr) {
+		Archivo.write(reinterpret_cast<char*>(&actual->id), sizeof(actual->id));
+		Archivo.write(reinterpret_cast<char*>(&actual->telefono), sizeof(actual->telefono));
+
+		auto guardarString = [&](const string& str) {
+			size_t len = str.size();
+			Archivo.write(reinterpret_cast<char*>(&len), sizeof(len));
+			Archivo.write(str.c_str(), len);
+			};
+
+		guardarString(actual->nombre);
+		guardarString(actual->apellidoPaterno);
+		guardarString(actual->apellidoMaterno);
+		guardarString(actual->email);
+		guardarString(actual->especialidad);
+
+		actual = actual->sig;
+	}
+	Archivo.close();
+}
+void guardarConsultasBin(consultas* ini, const string& nombreArchivo) {
+	ofstream Archivo(nombreArchivo, ios::binary | ios::trunc);
+	if (!Archivo.is_open()) { MessageBox(NULL, "Error al abrir archivo", "Error", MB_ICONERROR); return; }
+
+	consultas* actual = ini;
+	while (actual != nullptr) {
+		Archivo.write(reinterpret_cast<char*>(&actual->id), sizeof(actual->id));
+		Archivo.write(reinterpret_cast<char*>(&actual->fechaConsulta), sizeof(actual->fechaConsulta));
+		Archivo.write(reinterpret_cast<char*>(&actual->numDeConusultorio), sizeof(actual->numDeConusultorio));
+		Archivo.write(reinterpret_cast<char*>(&actual->cedula), sizeof(actual->cedula));
+
+		auto guardarString = [&](const string& str) {
+			size_t len = str.size();
+			Archivo.write(reinterpret_cast<char*>(&len), sizeof(len));
+			Archivo.write(str.c_str(), len);
+			};
+
+		guardarString(actual->nombreMedico);
+		guardarString(actual->especialidad);
+
+		Archivo.write(reinterpret_cast<char*>(&actual->statusCita), sizeof(actual->statusCita));
+		Archivo.write(reinterpret_cast<char*>(&actual->numPaciente), sizeof(actual->numPaciente));
+		guardarString(actual->nombrePaciente);
+		guardarString(actual->resultado);
+		guardarString(actual->diagnostico);
+
+		actual = actual->sig;
+	}
+	Archivo.close();
+}
+void guardarEspecialidadBin(especialidad* ini, const string& nombreArchivo) {
+	ofstream Archivo(nombreArchivo, ios::binary | ios::trunc);
+	if (!Archivo.is_open()) { MessageBox(NULL, "Error al abrir archivo", "Error", MB_ICONERROR); return; }
+
+	espeActual= ini;
+	while (espeActual != nullptr) {
+		Archivo.write(reinterpret_cast<char*>(&espeActual->clave), sizeof(espeActual->clave)); // arreglo fijo 4 bytes
+
+		size_t len = espeActual->defEspecialidad.size();
+		Archivo.write(reinterpret_cast<char*>(&len), sizeof(len));
+		Archivo.write(espeActual->defEspecialidad.c_str(), len);
+
+		espeActual = espeActual->sig;
+	}
+	Archivo.close();
 }
 
-void guardarEnArchivosMedicos(medicos* Ini) {
+
+
+
+
+
+void leerPacienteBin(const string& nombreArchivo) {
+	ifstream Archivo(nombreArchivo, ios::binary);
+	if (!Archivo.is_open()) {
+		MessageBox(NULL, "Error al abrir el archivo", "Error", MB_ICONERROR);
+		return;
+	}
+
+	pacienteIni = nullptr;
+	pacienteFin = nullptr;
+
+	while (Archivo.peek() != EOF) {
+		paciente* nuevo = new paciente;
+		
+		// Leer los campos básicos
+		Archivo.read(reinterpret_cast<char*>(&nuevo->id), sizeof(nuevo->id));
+		Archivo.read(reinterpret_cast<char*>(&nuevo->telefono), sizeof(nuevo->telefono));
+		Archivo.read(reinterpret_cast<char*>(&nuevo->genero), sizeof(nuevo->genero));
+		Archivo.read(reinterpret_cast<char*>(&nuevo->edad), sizeof(nuevo->edad));
+
+		// Función auxiliar para leer strings
+		auto leerString = [&](string& str) {
+			size_t len;
+			Archivo.read(reinterpret_cast<char*>(&len), sizeof(len));
+			char* buffer = new char[len + 1];
+			Archivo.read(buffer, len);
+			buffer[len] = '\0';
+			str = buffer;
+			delete[] buffer;
+			};
+
+		leerString(nuevo->nombre);
+		leerString(nuevo->apellidoPaterno);
+		leerString(nuevo->apellidoMaterno);
+		leerString(nuevo->correo);
+		agregarNodo(pacienteIni, pacienteFin, nuevo);
+	}
+
+	Archivo.close();
+}
+void leerMedicosBin(const string& nombreArchivo) {
+	ifstream Archivo(nombreArchivo, ios::binary);
+	if (!Archivo.is_open()) {
+		MessageBox(NULL, "Error al abrir archivo", "Error", MB_ICONERROR);
+		return;
+	}
+
+	medicoIni = medicoFinal = nullptr;
+
+	while (Archivo.peek() != EOF) {
+		medicos* nuevo = new medicos;
+
+		Archivo.read(reinterpret_cast<char*>(&nuevo->id), sizeof(nuevo->id));
+		Archivo.read(reinterpret_cast<char*>(&nuevo->telefono), sizeof(nuevo->telefono));
+
+		auto leerString = [&](string& str) {
+			size_t len;
+			Archivo.read(reinterpret_cast<char*>(&len), sizeof(len));
+			char* buffer = new char[len + 1];
+			Archivo.read(buffer, len);
+			buffer[len] = '\0';
+			str = buffer;
+			delete[] buffer;
+			};
+
+		leerString(nuevo->nombre);
+		leerString(nuevo->apellidoPaterno);
+		leerString(nuevo->apellidoMaterno);
+		leerString(nuevo->email);
+		leerString(nuevo->especialidad);
+
+		nuevo->ant = nullptr;
+		nuevo->sig = nullptr;
+		agregarNodo(medicoIni, medicoFinal, nuevo);
+	}
+	Archivo.close();
+}
+void leerConsultasBin(const string& nombreArchivo) {
+	ifstream Archivo(nombreArchivo, ios::binary);
+	if (!Archivo.is_open()) {
+		MessageBox(NULL, "Error al abrir archivo", "Error", MB_ICONERROR);
+		return;
+	}
+
+	consultasIni = consultasFin = nullptr;
+
+	while (Archivo.peek() != EOF) {
+		consultas* nuevo = new consultas;
+
+		Archivo.read(reinterpret_cast<char*>(&nuevo->id), sizeof(nuevo->id));
+		Archivo.read(reinterpret_cast<char*>(&nuevo->fechaConsulta), sizeof(nuevo->fechaConsulta));
+		Archivo.read(reinterpret_cast<char*>(&nuevo->numDeConusultorio), sizeof(nuevo->numDeConusultorio));
+		Archivo.read(reinterpret_cast<char*>(&nuevo->cedula), sizeof(nuevo->cedula));
+
+		auto leerString = [&](string& str) {
+			size_t len;
+			Archivo.read(reinterpret_cast<char*>(&len), sizeof(len));
+			char* buffer = new char[len + 1];
+			Archivo.read(buffer, len);
+			buffer[len] = '\0';
+			str = buffer;
+			delete[] buffer;
+			};
+
+		leerString(nuevo->nombreMedico);
+		leerString(nuevo->especialidad);
+
+		Archivo.read(reinterpret_cast<char*>(&nuevo->statusCita), sizeof(nuevo->statusCita));
+		Archivo.read(reinterpret_cast<char*>(&nuevo->numPaciente), sizeof(nuevo->numPaciente));
+		leerString(nuevo->nombrePaciente);
+		leerString(nuevo->resultado);
+		leerString(nuevo->diagnostico);
+
+		nuevo->ant = nullptr;
+		nuevo->sig = nullptr;
+		agregarNodo(consultasIni, consultasFin, nuevo);
+	}
+	Archivo.close();
+}
+void leerEspecialidadBin(const string& nombreArchivo) {
+	ifstream Archivo(nombreArchivo, ios::binary);
+	if (!Archivo.is_open()) {
+		MessageBox(NULL, "Error al abrir archivo", "Error", MB_ICONERROR);
+		return;
+	}
+
+	espeIni = espeFin = nullptr;
+
+	while (Archivo.peek() != EOF) {
+		especialidad* nuevo = new especialidad;
+
+		Archivo.read(reinterpret_cast<char*>(&nuevo->clave), sizeof(nuevo->clave));
+
+		size_t len;
+		Archivo.read(reinterpret_cast<char*>(&len), sizeof(len));
+		char* buffer = new char[len + 1];
+		Archivo.read(buffer, len);
+		buffer[len] = '\0';
+		nuevo->defEspecialidad = buffer;
+		delete[] buffer;
+
+		nuevo->ant = nullptr;
+		nuevo->sig = nullptr;
+		agregarNodo(espeIni, espeFin, nuevo);
+	}
+	Archivo.close();
 }
 
 
@@ -292,9 +522,82 @@ void obtenerDatosPaciente(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellido
 }
 // algo asi debo agregar 
 //HWND hNum, HWND hName, HWND hApellidoP, HWND hApellidoM, HWND hEmail, HWND hTelefono, HWND hEdad, HWND hGenero, ll* acutal
-void obtenerDatosMedicos(){}
-void obtenerDatosConsulta() {}
-void obtenerDatosEspecialidad() {}
+void obtenerDatosMedico(HWND hID, HWND hNombre, HWND hApellidoP, HWND hApellidoM, HWND hEmail, HWND hTelefono, HWND hEspecialidad, medicos* medicoActual) {
+	char buffer[256] = { 0 };
+
+	GetWindowText(hID, buffer, sizeof(buffer));
+	medicoActual->id = atoi(buffer);
+
+	GetWindowText(hNombre, buffer, sizeof(buffer));
+	medicoActual->nombre = buffer;
+
+	GetWindowText(hApellidoP, buffer, sizeof(buffer));
+	medicoActual->apellidoPaterno = buffer;
+
+	GetWindowText(hApellidoM, buffer, sizeof(buffer));
+	medicoActual->apellidoMaterno = buffer;
+
+	GetWindowText(hEmail, buffer, sizeof(buffer));
+	medicoActual->email = buffer;
+
+	GetWindowText(hTelefono, buffer, sizeof(buffer));
+	medicoActual->telefono = atoi(buffer);
+
+	// Leer especialidad como texto del ComboBox (si es texto)
+	GetWindowText(hEspecialidad, buffer, sizeof(buffer));
+	medicoActual->especialidad = buffer;
+}
+void obtenerDatosConsulta(HWND hID, HWND hFecha, HWND hConsultorio, HWND hCedula, HWND hMedico, HWND hEspecialidad,
+	HWND hStatus, HWND hPaciente, HWND hNombrePaciente, HWND hResultado, HWND hDiagnostico, consultas* actual) {
+
+	char buffer[256] = { 0 };
+
+	GetWindowText(hID, buffer, sizeof(buffer));
+	actual->id = atoi(buffer);
+
+	// Fecha: suponiendo que usas SYSTEMTIME y controles DateTimePicker
+	SYSTEMTIME st;
+	SendMessage(hFecha, DTM_GETSYSTEMTIME, 0, (LPARAM)&st);
+	actual->fechaConsulta = st;
+
+	GetWindowText(hConsultorio, buffer, sizeof(buffer));
+	actual->numDeConusultorio = atoi(buffer);
+
+	GetWindowText(hCedula, buffer, sizeof(buffer));
+	actual->cedula = atoi(buffer);
+
+	GetWindowText(hMedico, buffer, sizeof(buffer));
+	actual->nombreMedico = buffer;
+
+	GetWindowText(hEspecialidad, buffer, sizeof(buffer));
+	actual->especialidad = buffer;
+
+	int index = SendMessage(hStatus, CB_GETCURSEL, 0, 0);
+	actual->statusCita = (estatus)index;
+
+	GetWindowText(hPaciente, buffer, sizeof(buffer));
+	actual->numPaciente = atoi(buffer);
+
+	GetWindowText(hNombrePaciente, buffer, sizeof(buffer));
+	actual->nombrePaciente = buffer;
+
+	GetWindowText(hResultado, buffer, sizeof(buffer));
+	actual->resultado = buffer;
+
+	GetWindowText(hDiagnostico, buffer, sizeof(buffer));
+	actual->diagnostico = buffer;
+}
+
+void obtenerDatosEspecialidad(HWND hClave, HWND hDescripcion, especialidad* actual) {
+	char buffer[256] = { 0 };
+
+	GetWindowText(hClave, buffer, sizeof(buffer));
+	strcpy_s(actual->clave, buffer);  
+
+	GetWindowText(hDescripcion, buffer, sizeof(buffer));
+	actual->defEspecialidad = buffer;
+}
+
 
 //-LIMPIAR DATOS-//
 void limpiarDatosPaciente(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellidoM, HWND hEmail, HWND hTelefono, HWND hEdad, HWND hGenero) {
@@ -309,15 +612,78 @@ void limpiarDatosPaciente(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellido
 
 }
 //-PENDEIENTE MODIFICAR LAS DE ABAJO-//
-void limpiarDatosMedicos(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellidoM, HWND hEmail, HWND hTelefono, HWND hEdad, HWND hGenero) {}
-void limpiarDatosCitas(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellidoM, HWND hEmail, HWND hTelefono, HWND hEdad, HWND hGenero) {}
-void limpiarDatosEspecialidad(HWND hNum, HWND hName, HWND hApellidoP, HWND hApellidoM) {}
-
-//-LIBERAR MEMORIAS -//
-
-void liberarpunteros(){
-
+void limpiarDatosMedico(HWND hID, HWND hNombre, HWND hApellidoP, HWND hApellidoM, HWND hEmail, HWND hTelefono, HWND hEspecialidad) {
+	SetWindowText(hID, "");
+	SetWindowText(hNombre, "");
+	SetWindowText(hApellidoP, "");
+	SetWindowText(hApellidoM, "");
+	SetWindowText(hEmail, "");
+	SetWindowText(hTelefono, "");
+	SetWindowText(hEspecialidad, "");  // Puedes usar CB_SETCURSEL si es un ComboBox
 }
+
+void limpiarDatosEspecialidad(HWND hClave, HWND hDescripcion) {
+	SetWindowText(hClave, "");
+	SetWindowText(hDescripcion, "");
+}
+
+void limpiarDatosConsulta(HWND hID, HWND hFecha, HWND hConsultorio, HWND hCedula, HWND hMedico, HWND hEspecialidad,
+	HWND hStatus, HWND hPaciente, HWND hNombrePaciente, HWND hResultado, HWND hDiagnostico) {
+
+	SetWindowText(hID, "");
+
+	// Limpiar DateTimePicker: establecer a fecha actual
+	SYSTEMTIME st;
+	GetLocalTime(&st);
+	SendMessage(hFecha, DTM_SETSYSTEMTIME, (WPARAM)GDT_VALID, (LPARAM)&st);
+
+	SetWindowText(hConsultorio, "");
+	SetWindowText(hCedula, "");
+	SetWindowText(hMedico, "");
+	SetWindowText(hEspecialidad, "");
+
+	SendMessage(hStatus, CB_SETCURSEL, 0, 0); // Asume que 0 es el valor por defecto
+
+	SetWindowText(hPaciente, "");
+	SetWindowText(hNombrePaciente, "");
+	SetWindowText(hResultado, "");
+	SetWindowText(hDiagnostico, "");
+}
+
+
+template <typename LB>
+void LlenarlistBox(HWND hLis, LB* inicio, LB* vacio) {
+	char msgBuffer[256];
+	sprintf_s(msgBuffer, "%d - %s", vacio->id, vacio->nombre.c_str());
+	int index = (int)SendMessage(hLis, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(msgBuffer));
+	SendMessage(hLis, LB_SETITEMDATA, index, (LPARAM)vacio); // <--- GUARDA EL PUNTERO al paciente vacío
+
+	LB* actual = inicio;
+	while (actual != nullptr) {
+		string texto = to_string(actual->id) + " - " + actual->nombre + " " + actual->apellidoPaterno;
+		int index = (int)SendMessage(hLis, LB_ADDSTRING, 0, (LPARAM)texto.c_str());
+		SendMessage(hLis, LB_SETITEMDATA, index, (LPARAM)actual); // <--- GUARDA EL PUNTERO al paciente real
+		actual = actual->sig;
+	}
+}
+
+void LlenarListBoxEspecialidades(HWND hListBox, especialidad* inicio, especialidad* vacio) {
+	especialidad* aux = inicio;
+	int index = 0;
+
+	while (aux != nullptr) {
+		std::string textoMostrar = std::string(aux->clave) + " - " + aux->defEspecialidad;
+		index = (int)SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)textoMostrar.c_str());
+		SendMessageA(hListBox, LB_SETITEMDATA, index, (LPARAM)aux);
+		aux = aux->sig;
+	}
+
+	// Agregar el nodo vacío como última opción (opcional)
+	index = (int)SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)"0 - Nueva especialidad");
+	SendMessageA(hListBox, LB_SETITEMDATA, index, (LPARAM)vacio);
+}
+
+
 #pragma region Ventanas
 //menu  (solo aparece en pantalla principal)
 HMENU hMenuCitas;
@@ -340,60 +706,7 @@ LRESULT CALLBACK cVentanaConsultas(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK cVentanaEspecialidades(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK cVentanaReporte(HWND, UINT, WPARAM, LPARAM);
 // LRESULT CALLBACK cVentanaEasterEGG(HWND, UINT, WPARAM, LPARAM);		//Ventana de algo más?
-void centrarVentana(HWND hwnd) {
-	RECT rectVentana, rectPantalla;
-	// Obtener el tamaño de la ventana
-	GetWindowRect(hwnd, &rectVentana);
-	// Obtener el tamaño de la pantalla
-	GetWindowRect(GetDesktopWindow(), &rectPantalla);
-	// Calcular la posición centrada
-	int anchoVentana = rectVentana.right - rectVentana.left;
-	int altoVentana = rectVentana.bottom - rectVentana.top;
-	int posX = (rectPantalla.right - anchoVentana) / 2;
-	int posY = (rectPantalla.bottom - altoVentana) / 2;
-	// Establecer la nueva posición de la ventana
-	SetWindowPos(hwnd, nullptr, posX, posY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
-}
-
-//LOGICA DIAGNOSTICO
-/*
-*
-int len = GetWindowTextLength(hDiagnostico) + 1;  // +1 para el '\0'
-std::vector<char> buffer(len);  // Usamos vector en vez de arreglo estático
-GetWindowText(hDiagnostico, buffer.data(), len);  // buffer.data() obtiene el puntero a los datos internos
-// esto usando vectory faltaria ver como convertir a string para la estructura o directamente en la estructura usarlo como
-//vector <char> diagnositco
-// aunque lo mejor sra usar char
-*
-*
-*
-*
-TIENE MEJOR ADAPTACION STRING CON WN API GRTACIAS AL CHAR*  es probable que de error con textos muy largos,
-pero por el momento parece que sera un texto razonable
-// parece que 1024 puede ser un buen diagnostico, pero mejor dejar dinamico
-	int le = GetWindowTextLength(hName)+1;
-	char* pbuffer= new char[le];
-	GetWindowText(hName, pbuffer, le);
-	pacienteActual->nombre = string(pbuffer);
-
-
-----------------------
-codigo
--*------------
-	delete[] pbuffer;
-
-
-	///////////////////////////////////////////////
-
-	//Sin embargo, si el texto es muy largo (varios megabytes o más),
-es posible que debas considerar estrategias de manejo de memoria más robustas
-(como cargar el texto por partes o usar otro tipo de contenedores,
-como std::vector<char> o std::string, que gestionan la memoria de manera más eficiente).
-
-	Por ejemplo, en lugar de:
-	char* buffer = new char[len];
-	Puedes usar:
-	td::vector<char> buffer(len);
-	*/
+bool AbiertaDesdeMedicos = false;
 
 #pragma endregion
+

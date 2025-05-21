@@ -86,6 +86,7 @@
 #define CONS_TXT_horaConsulta           517
 #define CONS_TXT_estatusConsulta        518
 #define CONS_TXT_numConsultorio         519
+#define CONS_COMBO_nombreMED            520
 #define CONS_TXT_cedulMedConsulta       521
 #define CONS_TXT_nombreMedico           522
 #define CONS_TXT_especialidad           523
@@ -94,6 +95,9 @@
 #define CONS_BTN_regresar               526
 #define CONS_CAP_diagCita               527
 #define CONS_TXT_diagCita               528
+#define CONS_COMBO_CedulaMed            529
+#define CONS_COMBO_nombrePaciente       530
+#define CONS_COMBO_aConsul2             531
 #define DLG_ESPECIALIDAD                600
 #define ESP_LIST_Especialidades         601
 #define ESP_CAP_clvEspecialidad         602
@@ -105,7 +109,6 @@
 #define ESP_TXT_Especialidad            608
 #define ESP_BTN_regresarPrincipal       609
 #define ESP_BTN_regresarDoctor          610
-
 #define DLG_REPORTES                    700
 #define REP_RADIO_PACIENTE              1185
 #define REP_RADIO_MED                   1186
@@ -121,7 +124,6 @@
 #define REP_TXT_pacienteMedico          1200
 #define REP_TXT_consultas               1201
 #define REP_TXT_reporte                 1202
-
 #define IDR_MENU1                       40002
 #define ID_PACIENTES                    40003
 #define ID_MEDICOS                      40004
