@@ -12,6 +12,7 @@ int WINAPI WinMain(HINSTANCE hInst,HINSTANCE hPrev,PSTR cmdLine,int cShow) {
 	hVentanaPrincipal = CreateDialog(hInst,MAKEINTRESOURCE (DLG_PRINCIPAL),NULL, cVentanaPrincipal);
     leerPacienteBin("paciente.bin");
     leerEspecialidadBin("Especialidad.bin");
+    leerMedicosBin("medicos.bin");
     //leerEspecialidadBin("paciente.bin");
 	MSG msg;
 	ZeroMemory(&msg,sizeof(MSG));
@@ -25,6 +26,7 @@ int WINAPI WinMain(HINSTANCE hInst,HINSTANCE hPrev,PSTR cmdLine,int cShow) {
     
     guardarPacienteBin(pacienteIni, "paciente.bin");
     guardarEspecialidadBin(espeIni, "Especialidad.bin");
+    guardarMedicosBin(medicoIni, "medicos.bin");
     
 
 	return 0;
@@ -261,6 +263,8 @@ LRESULT CALLBACK cVentanaPaciente(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                 if (PacienteExistente != nullptr) {
                     MessageBox(hwnd, "El paciente con este ID ya existe.", "Error", MB_OK);
                     delete pacienteActual;
+                    delete PacienteExistente;
+                    
 
                 }
                 else {
@@ -415,19 +419,18 @@ LRESULT CALLBACK cVentanaMedicos(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
 
     medicos* medicoVacio = new medicos;
     medicoVacio->id = 0;  // ID especial para paciente vacío
-    medicoVacio->nombre = "Nuevo Paciente";
+    medicoVacio->nombre = "Nuevo Médico";
     medicoVacio->sig = nullptr;
     switch (msg) {
         case WM_INITDIALOG: {
-
+            LlenarlistBox(hListBox, medicoIni, medicoVacio);
             SendMessage(hEspecialidad, CB_RESETCONTENT, 0, 0);
             SendMessage(hEspecialidad, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>("Seleccione"));
-            SendMessage(hEspecialidad
-                , CB_SETCURSEL, 0, 0);
+            SendMessage(hEspecialidad, CB_SETCURSEL, 0, 0);
             especialidad*actual = espeIni;
             while (actual != nullptr) {
 
-                SendMessage(hEspecialidad, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(actual->defEspecialidad.c_str()));
+                SendMessage(hEspecialidad, CB_ADDSTRING, 1, reinterpret_cast<LPARAM>(actual->defEspecialidad.c_str()));
                 actual = actual->sig;
             }
 
@@ -436,32 +439,180 @@ LRESULT CALLBACK cVentanaMedicos(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
 
         case WM_COMMAND: {
             switch (LOWORD(wParam)) {
-            case MED_BTN_agregar:{
-            
-            
-            }break;
-            case MED_BTN_Mod:{}break;
-            case MED_BTN_borrar: {}break;
+            case MED_LIST_ALLmed: {
+                if (HIWORD(wParam) == LBN_SELCHANGE) {
+                    int selectedIndex = SendMessage(hListBox, LB_GETCURSEL, 0, 0);
+                    if (selectedIndex != LB_ERR) {
+                        if (selectedIndex != 0) {
+                            medicos* aux = (medicos*)SendMessage(hListBox, LB_GETITEMDATA, selectedIndex, 0);
+                            while (aux) {
+                                if (aux != nullptr) {
+                                    SetWindowText(hNum, std::to_string(aux->id).c_str());
+                                    SetWindowText(hName, aux->nombre.c_str());
+                                    SetWindowText(hApellidoP, aux->apellidoPaterno.c_str());
+                                    SetWindowText(hApellidoM, aux->apellidoMaterno.c_str());
+                                    SetWindowText(hEmail, aux->email.c_str());
+                                    SetWindowText(hTelefono, std::to_string(aux->telefono).c_str());
+                                    SetWindowText(hEspecialidad, aux->especialidad.c_str());
+                                    EnableWindow(hNum, FALSE);
+                                    EnableWindow(hbotonGuardar, FALSE);
+                                    break;
+                                }
+                                aux = aux->sig;
+                            }
+                        }
+                        else {
+                            limpiarDatosMedico(hNum, hName, hApellidoP, hApellidoM, hEmail, hTelefono, hEspecialidad);
+                            EnableWindow(hNum, TRUE);
+                            EnableWindow(hbotonGuardar, TRUE);
+                        }
+                    }
+                }
+            } break;
+
+            case MED_BTN_agregar: {
+                MedicoActual = new medicos;
+                obtenerDatosMedico(hNum, hName, hApellidoP, hApellidoM, hEmail, hTelefono, hEspecialidad, MedicoActual);
+                if (MedicoActual->id <= 0) {
+                    MessageBox(hwnd, "La cédula no puede ser 0 ó menor a 0.", "Error", MB_OK);
+                    delete MedicoActual;
+                }
+                else {
+                    medicos* medicoExistente = BusquedaBinariaID(medicoIni, MedicoActual->id);
+                    if (medicoExistente != nullptr) {
+                        MessageBox(hwnd, "El médico con esta cédula ya está registrado.", "Error", MB_OK);
+                        delete MedicoActual;
+                    }
+                    else {
+                        agregarNodo(medicoIni, medicoFinal, MedicoActual);
+                        medicoIni = mergeSortMedicos(medicoIni);
+                        // Actualizar medicoFinal
+                        medicos* temp = medicoIni;
+                        while (temp && temp->sig != nullptr) {
+                            temp = temp->sig;
+                        }
+                        medicoFinal = temp;
+
+                        char msgBuffer[100];
+                        sprintf_s(msgBuffer, "Médico agregado: %s %s", MedicoActual->nombre.c_str(), MedicoActual->apellidoPaterno.c_str());
+                        MessageBox(hwnd, msgBuffer, "Médico Guardado", MB_OK);
+                        limpiarDatosMedico(hNum, hName, hApellidoP, hApellidoM, hEmail, hTelefono, hEspecialidad);
+                        SendMessage(hListBox, LB_RESETCONTENT, 0, 0);
+                        LlenarlistBox(hListBox, medicoIni, medicoVacio);
+                    }
+                }
+            } break;
+
+            case MED_BTN_Mod: {
+                medicos* MedicoSeleccionado = new medicos;
+                obtenerDatosMedico(hNum, hName, hApellidoP, hApellidoM, hEmail, hTelefono, hEspecialidad, MedicoSeleccionado);
+                medicos* medicoBuscado = BusquedaBinariaID(medicoIni, MedicoSeleccionado->id);
+                if (medicoBuscado) {
+                    medicoBuscado->nombre = MedicoSeleccionado->nombre;
+                    medicoBuscado->apellidoPaterno = MedicoSeleccionado->apellidoPaterno;
+                    medicoBuscado->apellidoMaterno = MedicoSeleccionado->apellidoMaterno;
+                    medicoBuscado->email = MedicoSeleccionado->email;
+                    medicoBuscado->telefono = MedicoSeleccionado->telefono;
+                    medicoBuscado->especialidad = MedicoSeleccionado->especialidad;
+
+                    // Refrescar lista
+                    SendMessage(hListBox, LB_RESETCONTENT, 0, 0);
+                    LlenarlistBox(hListBox, medicoIni, medicoVacio);
+
+                    EnableWindow(hNum, TRUE);
+                    EnableWindow(hbotonGuardar, TRUE);
+                    limpiarDatosMedico(hNum, hName, hApellidoP, hApellidoM, hEmail, hTelefono, hEspecialidad);
+                }
+                else {
+                    MessageBox(hwnd, "No se encontró el médico para modificar.", "Error", MB_OK);
+                }
+                delete MedicoSeleccionado;
+            } break;
+
+            case MED_BTN_borrar: {
+                medicos* eliminar = new medicos;
+                obtenerDatosMedico(hNum, hName, hApellidoP, hApellidoM, hEmail, hTelefono, hEspecialidad, eliminar);
+                medicos* encontrado = BusquedaBinariaID(medicoIni, eliminar->id);
+                if (encontrado) {
+                    eliminarNodo(medicoIni, medicoFinal, encontrado);
+                    int selectedIndex = (int)SendMessage(hListBox, LB_GETCURSEL, 0, 0);
+                    if (selectedIndex != LB_ERR) {
+                        SendMessage(hListBox, LB_DELETESTRING, selectedIndex, 0);
+                    }
+                    limpiarDatosMedico(hNum, hName, hApellidoP, hApellidoM, hEmail, hTelefono, hEspecialidad);
+                }
+                else {
+                    MessageBox(hwnd, "No se encontró el médico para eliminar.", "Error", MB_OK);
+                }
+                delete eliminar;
+                EnableWindow(hNum, TRUE);
+            } break;
             case MED_BTN_masEspeci: {
                 AbiertaDesdeMedicos = true;
                 DialogBox(GetModuleHandle(NULL),MAKEINTRESOURCE(DLG_ESPECIALIDAD),hwnd,cVentanaEspecialidades);
                 AbiertaDesdeMedicos = false;
+
                 SendMessage(hEspecialidad, CB_RESETCONTENT, 0, 0);
-                SendMessage(hEspecialidad, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>("Seleccione"));
-                SendMessage(hEspecialidad
-                    , CB_SETCURSEL, 0, 0);
+                SendMessage(hEspecialidad, CB_ADDSTRING, 1, reinterpret_cast<LPARAM>("Seleccione"));
+
                 especialidad* actual = espeIni;
                 while (actual != nullptr) {
-
                     SendMessage(hEspecialidad, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(actual->defEspecialidad.c_str()));
                     actual = actual->sig;
                 }
+
+                SendMessage(hEspecialidad, CB_SETCURSEL, 0, 0);  // Selecciona "Seleccione" al final
+
 
                 
 
             
             }break;
-            case MED_BTN_buscar:{}break;
+            case MED_BTN_buscar: {
+                medicos* filtro = new medicos;
+                obtenerDatosMedico(hNum, hName, hApellidoP, hApellidoM, hEmail, hTelefono, hEspecialidad, filtro);
+
+                SendMessage(hListBox, LB_RESETCONTENT, 0, 0);
+
+                // Agrega un item vacío o "Seleccione"
+                char msgBuffer[256];
+                sprintf_s(msgBuffer, "%d - %s", medicoVacio->id, medicoVacio->nombre.c_str());
+                int index = (int)SendMessage(hListBox, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(msgBuffer));
+                SendMessage(hListBox, LB_SETITEMDATA, index, (LPARAM)medicoVacio->id);
+
+                medicos* temp = medicoIni;
+                while (temp) {
+                    bool coincide = true;
+
+                    if (filtro->id != 0 && temp->id != filtro->id) coincide = false;
+                    if (!filtro->nombre.empty() && temp->nombre != filtro->nombre) coincide = false;
+                    if (!filtro->apellidoPaterno.empty() && temp->apellidoPaterno != filtro->apellidoPaterno) coincide = false;
+                    if (!filtro->apellidoMaterno.empty() && temp->apellidoMaterno != filtro->apellidoMaterno) coincide = false;
+                    if (!filtro->email.empty() && temp->email != filtro->email) coincide = false;
+                    if (filtro->telefono != 0 && temp->telefono != filtro->telefono) coincide = false;
+                    if (!filtro->especialidad.empty() && temp->especialidad != filtro->especialidad) coincide = false;
+
+                    if (coincide) {
+                        char buffer[256];
+                        sprintf_s(buffer, "%d - %s %s %s - %s", temp->id,
+                            temp->nombre.c_str(),
+                            temp->apellidoPaterno.c_str(),
+                            temp->apellidoMaterno.c_str(),
+                            temp->especialidad.c_str());
+                        int index = (int)SendMessage(hListBox, LB_ADDSTRING, 0, (LPARAM)buffer);
+                        SendMessage(hListBox, LB_SETITEMDATA, index, temp->id);
+                    }
+                    temp = temp->sig;
+                }
+
+                limpiarDatosMedico(hNum, hName, hApellidoP, hApellidoM, hEmail, hTelefono, hEspecialidad);
+                MessageBox(hwnd,
+                    "Para mostrar todos los médicos deje en blanco los campos y presione buscar.",
+                    "Advertencia",
+                    MB_OK | MB_ICONWARNING);
+                delete filtro;
+            } break;
+
             case MED_BTN_regresar: {
                 delete medicoVacio;
                 DestroyWindow(hwnd);
@@ -482,16 +633,212 @@ LRESULT CALLBACK cVentanaMedicos(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
 }
 
 LRESULT CALLBACK cVentanaConsultas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-     
+    static HWND hFolio, hFecha, hHora, hConsultorio, hCedula, hComboMed, hComboPac, hEspecialidad, hEstatus, hResultado, hDiagnostico, hListBox, hNumPaciente;
+    
     switch (msg) {
+    case WM_INITDIALOG: {
+        hFolio         = GetDlgItem(hwnd, CONS_CAP_folioConsul);
+        hFecha         = GetDlgItem(hwnd, CONS_CAL_FECHAConsul);
+        hHora          = GetDlgItem(hwnd, CONS_CAP_horaConsul);
+        hConsultorio   = GetDlgItem(hwnd, CONS_CAP_numDeConsul);
+        hCedula        = GetDlgItem(hwnd, CONS_COMBO_CedulaMed);
+        hComboMed      = GetDlgItem(hwnd, CONS_COMBO_nombreMED);
+        hComboPac      = GetDlgItem(hwnd, CONS_COMBO_nombrePaciente);
+        hNumPaciente = GetDlgItem(hwnd, CONS_COMBO_aConsul2);
+        hEspecialidad  = GetDlgItem(hwnd, CONS_COMBO_especi);
+        hEstatus       = GetDlgItem(hwnd, CONS_COMBO_aConsul);
+        hResultado     = GetDlgItem(hwnd, CONS_CAP_diagCita);
+        hDiagnostico   = GetDlgItem(hwnd, CONS_CAP_diagCita);
+        hListBox       = GetDlgItem(hwnd, CONS_LIST_consulDispo);
+
+        // Llenar ComboBox de médicos
+        for (medicos* m = medicoIni; m; m = m->sig) {
+            SendMessage(hComboMed, CB_ADDSTRING, 0, (LPARAM)(m->nombre + " " + m->apellidoPaterno).c_str());
+        }
+
+        // Llenar ComboBox de pacientes
+        for (paciente* p = pacienteIni; p; p = p->sig) {
+            SendMessage(hComboPac, CB_ADDSTRING, 0, (LPARAM)(p->nombre + " " + p->apellidoPaterno).c_str());
+        }
+
+        // Llenar ComboBox de estatus
+        SendMessage(hEstatus, CB_ADDSTRING, 0, (LPARAM)"Confirmada");
+        SendMessage(hEstatus, CB_ADDSTRING, 0, (LPARAM)"Completada");
+        SendMessage(hEstatus, CB_ADDSTRING, 0, (LPARAM)"Cancelada");
+        SendMessage(hEstatus, CB_ADDSTRING, 0, (LPARAM)"No llegó");
+        SendMessage(hEstatus, CB_SETCURSEL, 0, 0);
+
+        // Llenar ComboBox de especialidades
+        for (especialidad* e = espeIni; e; e = e->sig) {
+            SendMessage(hEspecialidad, CB_ADDSTRING, 0, (LPARAM)e->defEspecialidad.c_str());
+        }
+
+        // Llenar ListBox de consultas existentes
+        for (consultas* c = consultasIni; c; c = c->sig) {
+            char buffer[256];
+            sprintf_s(buffer, "%d - %s con %s", c->id, c->nombrePaciente.c_str(), c->nombreMedico.c_str());
+            int index = (int)SendMessage(hListBox, LB_ADDSTRING, 0, (LPARAM)buffer);
+            SendMessage(hListBox, LB_SETITEMDATA, index, (LPARAM)c);
+        }
+
+        return TRUE;
+    }
+
+    case WM_COMMAND: {
+        switch (LOWORD(wParam)) {
+        case CONS_COMBO_nombreMED: {
+            if (HIWORD(wParam) == CBN_SELCHANGE) {
+                int index = SendMessage(hComboMed, CB_GETCURSEL, 0, 0);
+                char buffer[100];
+                SendMessage(hComboMed, CB_GETLBTEXT, index, (LPARAM)buffer);
+
+                for (medicos* m = medicoIni; m; m = m->sig) {
+                    string nombreCompleto = m->nombre + " " + m->apellidoPaterno;
+                    if (nombreCompleto == buffer) {
+                        SetWindowText(hCedula, to_string(m->id).c_str());
+                        SetWindowText(hEspecialidad, m->especialidad.c_str());
+                        break;
+                    }
+                }
+            }
+        } break;
+
+        case CONS_COMBO_nombrePaciente: {
+            if (HIWORD(wParam) == CBN_SELCHANGE) {
+                int index = SendMessage(hComboPac, CB_GETCURSEL, 0, 0);
+                char buffer[100];
+                SendMessage(hComboPac, CB_GETLBTEXT, index, (LPARAM)buffer);
+
+                for (paciente* p = pacienteIni; p; p = p->sig) {
+                    string nombreCompleto = p->nombre + " " + p->apellidoPaterno;
+                    if (nombreCompleto == buffer) {
+                        SetWindowText(hNumPaciente, to_string(p->id).c_str());
+                        break;
+                    }
+                }
+            }
+        } break;
+
+        case CONS_BTN_agendar: {
+            consultas* nueva = new consultas;
+
+            char buffer[256];
+            GetWindowText(hFolio, buffer, sizeof(buffer));
+            nueva->id = atoi(buffer);
+
+            // Verificar duplicado
+            if (BusquedaBinariaID(consultasIni, nueva->id)) {
+                MessageBox(hwnd, "Folio ya existente", "Error", MB_ICONERROR);
+                delete nueva;
+                break;
+            }
+
+            SYSTEMTIME fecha;
+            SendMessage(hFecha, DTM_GETSYSTEMTIME, 0, (LPARAM)&fecha);
+            nueva->fechaConsulta = fecha;
+
+            GetWindowText(hHora, buffer, sizeof(buffer));
+            string horaStr = buffer;
+
+            GetWindowText(hConsultorio, buffer, sizeof(buffer));
+            nueva->numDeConusultorio = atoi(buffer);
+
+            // Verificar si hay empalme (misma fecha/hora/consultorio)
+            for (consultas* c = consultasIni; c; c = c->sig) {
+                if (memcmp(&c->fechaConsulta, &nueva->fechaConsulta, sizeof(SYSTEMTIME)) == 0 &&
+                    c->numDeConusultorio == nueva->numDeConusultorio &&
+                    c->resultado == horaStr) {
+                    MessageBox(hwnd, "Empalme con otra consulta", "Conflicto", MB_ICONERROR);
+                    delete nueva;
+                    return TRUE;
+                }
+            }
+
+            GetWindowText(hCedula, buffer, sizeof(buffer));
+            nueva->cedula = atoi(buffer);
+
+            GetWindowText(hComboMed, buffer, sizeof(buffer));
+            nueva->nombreMedico = buffer;
+
+            GetWindowText(hEspecialidad, buffer, sizeof(buffer));
+            nueva->especialidad = buffer;
+
+            int sel = SendMessage(hEstatus, CB_GETCURSEL, 0, 0);
+            nueva->statusCita = (estatus)sel;
+
+            GetWindowText(hNumPaciente, buffer, sizeof(buffer));
+            nueva->numPaciente = atoi(buffer);
+
+            GetWindowText(hComboPac, buffer, sizeof(buffer));
+            nueva->nombrePaciente = buffer;
+
+            nueva->resultado = horaStr;
+
+            GetWindowText(hDiagnostico, buffer, sizeof(buffer));
+            nueva->diagnostico = buffer;
+
+            agregarNodo(consultasIni, consultasFin, nueva);
+
+            char msg[128];
+            sprintf_s(msg, "Consulta agendada con %s", nueva->nombreMedico.c_str());
+            MessageBox(hwnd, msg, "Consulta guardada", MB_OK);
+
+            SendMessage(hListBox, LB_RESETCONTENT, 0, 0);
+            for (consultas* c = consultasIni; c; c = c->sig) {
+                char b[256];
+                sprintf_s(b, "%d - %s con %s", c->id, c->nombrePaciente.c_str(), c->nombreMedico.c_str());
+                int index = (int)SendMessage(hListBox, LB_ADDSTRING, 0, (LPARAM)b);
+                SendMessage(hListBox, LB_SETITEMDATA, index, (LPARAM)c);
+            }
+
+        } break;
+
+        case CONS_BTN_reAgendar: {
+            // Modificar consulta existente
+            char buffer[100];
+            GetWindowText(hFolio, buffer, sizeof(buffer));
+            int folio = atoi(buffer);
+            consultas* c = BusquedaBinariaID(consultasIni, folio);
+
+            if (!c) {
+                MessageBox(hwnd, "Consulta no encontrada", "Error", MB_ICONERROR);
+                break;
+            }
+
+            SYSTEMTIME fecha;
+            SendMessage(hFecha, DTM_GETSYSTEMTIME, 0, (LPARAM)&fecha);
+            c->fechaConsulta = fecha;
+
+            GetWindowText(hHora, buffer, sizeof(buffer));
+            c->resultado = buffer;
+
+            GetWindowText(hConsultorio, buffer, sizeof(buffer));
+            c->numDeConusultorio = atoi(buffer);
+
+            int sel = SendMessage(hEstatus, CB_GETCURSEL, 0, 0);
+            c->statusCita = (estatus)sel;
+
+            GetWindowText(hDiagnostico, buffer, sizeof(buffer));
+            c->diagnostico = buffer;
+
+            MessageBox(hwnd, "Consulta actualizada", "OK", MB_OK);
+        } break;
+
+        case CONS_BTN_regresar: {
+            DestroyWindow(hwnd);
+            ShowWindow(hVentanaPrincipal, SW_SHOW);
+        } break;
+        }
+    } break;
+
     case WM_CLOSE: {
         DestroyWindow(hwnd);
-        hVentanaPrincipal;
         ShowWindow(hVentanaPrincipal, SW_SHOW);
-        break;
+    } break;
     }
-    }
-    return FALSE; }
+    return FALSE;
+}
+
 
 LRESULT CALLBACK cVentanaEspecialidades(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) { 
     HWND hClave = GetDlgItem(hwnd, ESP_CAP_clvEspecialidad);

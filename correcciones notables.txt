@@ -1,2 +1,2 @@
 1. eliminar los punteros que quedan flotando
-
+2. Pequeño bug en la especializacion de medicos

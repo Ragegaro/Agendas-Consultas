@@ -203,6 +203,66 @@ void quicksortPacientes(paciente* low, paciente* high) {
  
 #pragma endregion
 
+#pragma region mergeSortID
+// Función para dividir la lista en dos mitades
+medicos* mitadMedicos(medicos* cabeza) {
+	if (!cabeza || !cabeza->sig)
+		return cabeza;
+
+	medicos* lento = cabeza;
+	medicos* rapido = cabeza->sig;
+
+	while (rapido && rapido->sig) {
+		lento = lento->sig;
+		rapido = rapido->sig->sig;
+	}
+
+	medicos* mitad = lento->sig;
+	lento->sig = nullptr;   // Corta la lista en dos
+	if (mitad) mitad->ant = nullptr;
+
+	return mitad;
+}
+
+// Función para fusionar dos listas ordenadas (por id)
+medicos* fusionarMedicos(medicos* lista1, medicos* lista2) {
+	if (!lista1) return lista2;
+	if (!lista2) return lista1;
+
+	medicos* resultado = nullptr;
+
+	if (lista1->id <= lista2->id) {
+		resultado = lista1;
+		resultado->sig = fusionarMedicos(lista1->sig, lista2);
+		if (resultado->sig) resultado->sig->ant = resultado;
+		resultado->ant = nullptr;
+	}
+	else {
+		resultado = lista2;
+		resultado->sig = fusionarMedicos(lista1, lista2->sig);
+		if (resultado->sig) resultado->sig->ant = resultado;
+		resultado->ant = nullptr;
+	}
+
+	return resultado;
+}
+
+// Función principal de merge sort
+medicos* mergeSortMedicos(medicos* cabeza) {
+	if (!cabeza || !cabeza->sig)
+		return cabeza;
+
+	medicos* segundaMitad = mitadMedicos(cabeza);
+
+	cabeza = mergeSortMedicos(cabeza);
+	segundaMitad = mergeSortMedicos(segundaMitad);
+
+	return fusionarMedicos(cabeza, segundaMitad);
+}
+
+#pragma endregion
+
+
 
 template <typename LL>
 bool idBuscado(LL* tipoBusquedaIni,int idBuscado){
@@ -619,7 +679,7 @@ void limpiarDatosMedico(HWND hID, HWND hNombre, HWND hApellidoP, HWND hApellidoM
 	SetWindowText(hApellidoM, "");
 	SetWindowText(hEmail, "");
 	SetWindowText(hTelefono, "");
-	SetWindowText(hEspecialidad, "");  // Puedes usar CB_SETCURSEL si es un ComboBox
+	SendMessage(hEspecialidad, CB_SETCURSEL, 40, 0);
 }
 
 void limpiarDatosEspecialidad(HWND hClave, HWND hDescripcion) {

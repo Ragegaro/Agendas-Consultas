@@ -124,6 +124,7 @@
 #define REP_TXT_pacienteMedico          1200
 #define REP_TXT_consultas               1201
 #define REP_TXT_reporte                 1202
+#define IDC_MONTHCALENDAR1              1204
 #define IDR_MENU1                       40002
 #define ID_PACIENTES                    40003
 #define ID_MEDICOS                      40004
@@ -139,7 +140,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        128
 #define _APS_NEXT_COMMAND_VALUE         40015
-#define _APS_NEXT_CONTROL_VALUE         1204
+#define _APS_NEXT_CONTROL_VALUE         1205
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
